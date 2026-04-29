@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>ProximityLock</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <header class="app-header">
+    <span class="app-logo">🔒</span>
+    <h1>ProximityLock</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- Device Selection -->
+    <div class="card">
+      <div class="section-title">Bluetooth Device</div>
+      <div id="device-list-el"></div>
+      <div class="device-actions">
+        <span class="status-text" id="scan-status">Not scanning</span>
+        <button class="btn btn-secondary" id="scan-btn">Scan</button>
+      </div>
+    </div>
+
+    <!-- Signal Strength -->
+    <div class="card">
+      <div class="section-title">Live Signal</div>
+      <div id="signal-meter-el"></div>
+    </div>
+
+    <!-- Sensitivity -->
+    <div class="card">
+      <div class="section-title">Lock Sensitivity</div>
+      <div class="card-body">
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="rssi-threshold">RSSI Threshold</label>
+            <span class="slider-val" id="rssi-val">— dBm</span>
+          </div>
+          <input type="range" id="rssi-threshold" min="-100" max="-40" step="1">
+          <div class="slider-labels"><span>Far</span><span>Close</span><span>Very Close</span></div>
+        </div>
+
+        <div class="slider-row" style="margin-top:14px">
+          <div class="slider-header">
+            <label for="lock-delay">Lock Delay</label>
+            <span class="slider-val" id="delay-val">— s</span>
+          </div>
+          <input type="range" id="lock-delay" min="5" max="60" step="1">
+          <div class="slider-labels"><span>5s</span><span>30s</span><span>60s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Behavior -->
+    <div class="card">
+      <div class="section-title">App Behavior</div>
+      <div class="card-body">
+        <label class="check-row">
+          <input type="checkbox" id="start-on-login">
+          Start on Login
+        </label>
+        <label class="check-row">
+          <input type="checkbox" id="menu-bar-only">
+          Menu Bar Only
+        </label>
+        <label class="check-row">
+          <input type="checkbox" id="show-in-dock">
+          Show in Dock
+        </label>
+        <label class="check-row">
+          <input type="checkbox" id="start-minimized">
+          Start Minimized
+        </label>
+        <label class="check-row">
+          <input type="checkbox" id="notifications">
+          Show Lock Notifications
+        </label>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+      <div class="section-title">Quick Actions</div>
+      <div class="card-body" style="padding-top:10px">
+        <button class="btn btn-danger" id="lock-now-btn" style="width:100%">Lock Screen Now</button>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="card">
+      <div class="section-title">About</div>
+      <div class="card-body">
+        <p class="about-text">ProximityLock v1.0.0<br>Automatically locks your Mac when your Bluetooth device moves out of range.</p>
+      </div>
+    </div>
+
+    <!-- Save -->
+    <div class="footer">
+      <button class="btn btn-primary" id="save-btn">Save</button>
+    </div>
+
+  </div>
+
+  <script src="scripts/signal-meter.js"></script>
+  <script src="scripts/device-list.js"></script>
+  <script src="scripts/preferences.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "name": "proximitylock",
+  "version": "1.0.0",
+  "description": "Bluetooth Proximity Lock for macOS",
+  "main": "src/main/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:arm64": "electron-builder --arm64",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.danielgutierrez.proximitylock",
+    "productName": "ProximityLock",
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "asarUnpack": [
+      "**/*.node",
+      "**/node_modules/@abandonware/**/*"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ],
+      "category": "public.app-category.utilities",
+      "extendInfo": {
+        "NSBluetoothAlwaysUsageDescription": "ProximityLock needs Bluetooth access to monitor your device proximity and automatically lock your Mac.",
+        "LSUIElement": true
+      }
+    },
+    "dmg": {
+      "title": "ProximityLock"
+    }
+  },
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-15",
+    "auto-launch": "^5.0.5",
+    "electron-store": "^7.0.3"
+  },
+  "devDependencies": {
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3"
+  },
+  "type": "commonjs"
+}
