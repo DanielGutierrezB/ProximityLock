@@ -41,7 +41,8 @@
       "extendInfo": {
         "NSCameraUsageDescription": "ProximityLock uses the camera for face detection to lock your Mac when you leave.",
         "LSUIElement": true
-      }
+      },
+      "icon": "assets/icons/icon.icns"
     },
     "dmg": {
       "title": "ProximityLock"
