@@ -12,16 +12,18 @@
 
   class DeviceList {
     constructor(listId, statusId) {
-      this.listEl   = document.getElementById(listId);
-      this.statusEl = document.getElementById(statusId);
-      this.devices  = [];
-      this.selectedId = null;
-      this.onSelect = null;
-      this._scanning = false;
+      this.listEl      = document.getElementById(listId);
+      this.statusEl    = document.getElementById(statusId);
+      this.devices     = [];
+      this.selectedId  = null;
+      this.onSelect    = null;
+      this._scanning   = false;
+      this.showUnnamed = false;
     }
 
     setDevices(devices) {
       this.devices = devices;
+      this._updateStatus();
       this._render();
     }
 
@@ -32,8 +34,38 @@
 
     setScanning(scanning) {
       this._scanning = scanning;
-      if (this.statusEl) {
-        this.statusEl.textContent = scanning ? 'Scanning…' : `${this.devices.length} device(s) found`;
+      this._updateStatus();
+      this._render(); // refresh empty-state message text when scan state changes
+    }
+
+    setShowUnnamed(show) {
+      this.showUnnamed = show;
+      this._updateStatus();
+      this._render();
+    }
+
+    _isNamed(device) {
+      const name = device.name || '';
+      if (!name || name === 'Unknown Device') return false;
+      if (/^([0-9a-f]{2}[:-]){5}[0-9a-f]{2}$/i.test(name)) return false;
+      return true;
+    }
+
+    _getVisibleDevices() {
+      const sorted = [...this.devices].sort((a, b) => (b.rssi ?? -100) - (a.rssi ?? -100));
+      if (this.showUnnamed) return sorted;
+      return sorted.filter(d => this._isNamed(d));
+    }
+
+    _updateStatus() {
+      if (!this.statusEl) return;
+      if (this._scanning) {
+        this.statusEl.innerHTML = '<span class="spinner"></span>Scanning…';
+      } else {
+        const n = this._getVisibleDevices().length;
+        this.statusEl.textContent = n > 0
+          ? `Found ${n} device${n === 1 ? '' : 's'}`
+          : 'No devices found. Click Scan.';
       }
     }
 
@@ -47,24 +79,46 @@
       return '📡';
     }
 
+    _signalBars(rssi) {
+      let bars, cls;
+      if (rssi >= -60)      { bars = 4; cls = 'strong'; }
+      else if (rssi >= -70) { bars = 3; cls = 'strong'; }
+      else if (rssi >= -80) { bars = 2; cls = 'edge'; }
+      else if (rssi >= -90) { bars = 1; cls = 'far'; }
+      else                   { bars = 0; cls = ''; }
+
+      return `<div class="signal-bars" title="${escHtml(String(rssi))} dBm">` +
+        `<div class="bar b1 ${bars >= 1 ? cls : ''}"></div>` +
+        `<div class="bar b2 ${bars >= 2 ? cls : ''}"></div>` +
+        `<div class="bar b3 ${bars >= 3 ? cls : ''}"></div>` +
+        `<div class="bar b4 ${bars >= 4 ? cls : ''}"></div>` +
+        `</div>`;
+    }
+
     _render() {
-      if (this.devices.length === 0) {
-        this.listEl.innerHTML = `<div class="empty-state">${this._scanning ? 'Scanning for devices…' : 'No devices found. Click Scan.'}</div>`;
+      const visible = this._getVisibleDevices();
+
+      if (visible.length === 0) {
+        this.listEl.innerHTML = `<div class="empty-state">${
+          this._scanning ? 'Scanning for devices…' : 'No devices found. Click Scan.'
+        }</div>`;
         return;
       }
 
-      const sorted = [...this.devices].sort((a, b) => b.rssi - a.rssi);
-
-      this.listEl.innerHTML = sorted.map(d => `
-        <div class="device-item ${d.id === this.selectedId ? 'selected' : ''}" data-id="${escHtml(d.id)}" data-name="${escHtml(d.name)}">
-          <span class="device-icon">${this._deviceIcon(d.name)}</span>
-          <div class="device-info">
-            <div class="device-name">${escHtml(d.name)}</div>
-            <div class="device-addr">${escHtml(d.address || d.id)}</div>
-          </div>
-          <span class="device-rssi">${escHtml(String(d.rssi))} dBm</span>
-        </div>
-      `).join('');
+      this.listEl.innerHTML = visible.map(d => {
+        const named = this._isNamed(d);
+        const nameHtml = named
+          ? escHtml(d.name)
+          : `<span class="unnamed-label">Unknown</span>`;
+        return `<div class="device-item ${d.id === this.selectedId ? 'selected' : ''}" data-id="${escHtml(d.id)}" data-name="${escHtml(d.name)}">` +
+          `<span class="device-icon">${this._deviceIcon(d.name)}</span>` +
+          `<div class="device-info">` +
+          `<div class="device-name">${nameHtml}</div>` +
+          `<div class="device-addr">${escHtml(d.address || d.id)}</div>` +
+          `</div>` +
+          this._signalBars(d.rssi ?? -100) +
+          `</div>`;
+      }).join('');
 
       this.listEl.querySelectorAll('.device-item').forEach(el => {
         el.addEventListener('click', () => {

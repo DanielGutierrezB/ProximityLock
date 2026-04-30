@@ -97,12 +97,47 @@ body {
 }
 
 .section-header {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-secondary);
   padding: 6px 4px 2px;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-app-region: no-drag;
+  text-align: left;
+}
+.section-header:hover { opacity: 0.75; }
+
+.collapse-arrow {
+  font-size: 8px;
+  color: var(--text-tertiary);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.settings-section.collapsed .collapse-arrow {
+  transform: rotate(-90deg);
+}
+
+.section-body {
+  overflow: hidden;
+  max-height: 800px;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  opacity: 1;
+}
+.settings-section.collapsed .section-body {
+  max-height: 0;
+  opacity: 0;
 }
 
 /* ── Cards ── */
@@ -252,15 +287,29 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
 /* ── Toggle switches ── */
 .pref-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 11px 16px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--divider);
   gap: 12px;
 }
+.pref-row .toggle-switch { margin-top: 1px; }
 .pref-row--last { border-bottom: none; }
 
-.pref-label { font-size: 13px; color: var(--text-primary); flex: 1; }
+.pref-label { font-size: 13px; color: var(--text-primary); }
+
+.pref-label-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pref-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
 
 .toggle-switch {
   position: relative;
@@ -344,4 +393,77 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   gap: 8px;
   padding: 10px 0 0;
   -webkit-app-region: no-drag;
+}
+
+/* ── Slider control description ── */
+.control-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-top: -2px;
+  margin-bottom: 2px;
+}
+
+/* ── Signal strength bars ── */
+.signal-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+  flex-shrink: 0;
+  padding: 1px 0;
+}
+.signal-bars .bar {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--toggle-off);
+  transition: background 0.3s ease;
+}
+.signal-bars .bar.b1 { height: 4px; }
+.signal-bars .bar.b2 { height: 7px; }
+.signal-bars .bar.b3 { height: 11px; }
+.signal-bars .bar.b4 { height: 15px; }
+.signal-bars .bar.strong { background: var(--green); }
+.signal-bars .bar.edge   { background: var(--orange); }
+.signal-bars .bar.far    { background: var(--red); }
+
+/* ── Scanning spinner ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--text-tertiary);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+/* ── Show unnamed devices toggle ── */
+.unnamed-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+.unnamed-toggle input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+  width: 13px;
+  height: 13px;
+}
+
+/* ── Unnamed device label ── */
+.unnamed-label {
+  color: var(--text-tertiary);
+  font-style: italic;
 }

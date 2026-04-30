@@ -14,97 +14,143 @@
 
   <div class="content">
 
-    <div class="settings-section">
-      <div class="section-header">Bluetooth Device</div>
-      <div class="card">
-        <div id="device-list-el"></div>
-        <div class="device-actions">
-          <span class="status-text" id="scan-status">Not scanning</span>
-          <button class="btn btn-secondary" id="scan-btn">Scan</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="section-header">Live Signal</div>
-      <div class="card">
-        <div id="signal-meter-el"></div>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="section-header">Lock Sensitivity</div>
-      <div class="card card-body">
-        <div class="slider-row">
-          <div class="slider-header">
-            <label for="rssi-threshold">RSSI Threshold</label>
-            <span class="slider-val" id="rssi-val">— dBm</span>
+    <div class="settings-section" data-section="bluetooth">
+      <button class="section-header">
+        <span>Bluetooth Device</span>
+        <span class="collapse-arrow">▼</span>
+      </button>
+      <div class="section-body">
+        <div class="card">
+          <div id="device-list-el"></div>
+          <div class="device-actions">
+            <span class="status-text" id="scan-status">Not scanning</span>
+            <label class="unnamed-toggle">
+              <input type="checkbox" id="show-unnamed">
+              <span>Unnamed</span>
+            </label>
+            <button class="btn btn-secondary" id="scan-btn">Scan</button>
           </div>
-          <input type="range" id="rssi-threshold" min="-100" max="-40" step="1">
-          <div class="slider-labels"><span>Far</span><span>Close</span><span>Very Close</span></div>
         </div>
-        <div class="slider-divider"></div>
-        <div class="slider-row">
-          <div class="slider-header">
-            <label for="lock-delay">Lock Delay</label>
-            <span class="slider-val" id="delay-val">— s</span>
+      </div>
+    </div>
+
+    <div class="settings-section" data-section="signal">
+      <button class="section-header">
+        <span>Live Signal</span>
+        <span class="collapse-arrow">▼</span>
+      </button>
+      <div class="section-body">
+        <div class="card">
+          <div id="signal-meter-el"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section" data-section="lock-sensitivity">
+      <button class="section-header">
+        <span>Lock Sensitivity</span>
+        <span class="collapse-arrow">▼</span>
+      </button>
+      <div class="section-body">
+        <div class="card card-body">
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="rssi-threshold">Lock Distance</label>
+              <span class="slider-val" id="rssi-val">—</span>
+            </div>
+            <p class="control-desc">How far your device can go before locking. Closer = locks sooner when you walk away.</p>
+            <input type="range" id="rssi-threshold" min="-100" max="-40" step="1">
+            <div class="slider-labels"><span>~10 m</span><span>~5 m</span><span>~1 m</span></div>
           </div>
-          <input type="range" id="lock-delay" min="5" max="60" step="1">
-          <div class="slider-labels"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+          <div class="slider-divider"></div>
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="lock-delay">Lock Delay</label>
+              <span class="slider-val" id="delay-val">— s</span>
+            </div>
+            <p class="control-desc">How long to wait before locking after your device leaves range.</p>
+            <input type="range" id="lock-delay" min="5" max="60" step="1">
+            <div class="slider-labels"><span>5 s</span><span>30 s</span><span>60 s</span></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="settings-section">
-      <div class="section-header">App Behavior</div>
-      <div class="card">
-        <div class="pref-row">
-          <span class="pref-label">Start on Login</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="start-on-login">
-            <span class="toggle-knob"></span>
-          </label>
-        </div>
-        <div class="pref-row">
-          <span class="pref-label">Menu Bar Only</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="menu-bar-only">
-            <span class="toggle-knob"></span>
-          </label>
-        </div>
-        <div class="pref-row">
-          <span class="pref-label">Show in Dock</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="show-in-dock">
-            <span class="toggle-knob"></span>
-          </label>
-        </div>
-        <div class="pref-row">
-          <span class="pref-label">Start Minimized</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="start-minimized">
-            <span class="toggle-knob"></span>
-          </label>
-        </div>
-        <div class="pref-row pref-row--last">
-          <span class="pref-label">Show Lock Notifications</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="notifications">
-            <span class="toggle-knob"></span>
-          </label>
+    <div class="settings-section" data-section="app-behavior">
+      <button class="section-header">
+        <span>App Behavior</span>
+        <span class="collapse-arrow">▼</span>
+      </button>
+      <div class="section-body">
+        <div class="card">
+          <div class="pref-row">
+            <div class="pref-label-group">
+              <span class="pref-label">Start on Login</span>
+              <span class="pref-desc">Automatically launch when you log in.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="start-on-login">
+              <span class="toggle-knob"></span>
+            </label>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label-group">
+              <span class="pref-label">Menu Bar Only</span>
+              <span class="pref-desc">Run as a menu bar app with no Dock icon.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="menu-bar-only">
+              <span class="toggle-knob"></span>
+            </label>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label-group">
+              <span class="pref-label">Show in Dock</span>
+              <span class="pref-desc">Show the app icon in your Dock.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="show-in-dock">
+              <span class="toggle-knob"></span>
+            </label>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label-group">
+              <span class="pref-label">Start Minimized</span>
+              <span class="pref-desc">Open the settings window minimized at launch.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="start-minimized">
+              <span class="toggle-knob"></span>
+            </label>
+          </div>
+          <div class="pref-row pref-row--last">
+            <div class="pref-label-group">
+              <span class="pref-label">Show Lock Notifications</span>
+              <span class="pref-desc">Display a notification when your screen is locked.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notifications">
+              <span class="toggle-knob"></span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="settings-section">
-      <div class="section-header">About</div>
-      <div class="card">
-        <div class="about-row">
-          <span class="about-label">Version</span>
-          <span class="about-val">1.0.0</span>
-        </div>
-        <div class="about-row about-row--last">
-          <span class="about-desc">Locks your Mac when your Bluetooth device moves out of range</span>
+    <div class="settings-section" data-section="about">
+      <button class="section-header">
+        <span>About</span>
+        <span class="collapse-arrow">▼</span>
+      </button>
+      <div class="section-body">
+        <div class="card">
+          <div class="about-row">
+            <span class="about-label">Version</span>
+            <span class="about-val">1.0.0</span>
+          </div>
+          <div class="about-row about-row--last">
+            <span class="about-desc">Locks your Mac when your Bluetooth device moves out of range</span>
+          </div>
         </div>
       </div>
     </div>

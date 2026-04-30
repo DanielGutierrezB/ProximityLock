@@ -9,8 +9,20 @@
 
   function $(id) { return document.getElementById(id); }
 
-  function rssiLabel(v) { return `${v} dBm`; }
-  function delayLabel(v) { return `${v}s`; }
+  function delayLabel(v) { return `${v} s`; }
+
+  function rssiToDistanceLabel(dBm) {
+    const v = parseInt(dBm, 10);
+    if (v >= -50) return '≈ 1 meter';
+    if (v >= -60) return '≈ 2 meters';
+    if (v >= -70) return '≈ 5 meters';
+    if (v >= -80) return '≈ 8 meters';
+    return '≈ 10+ meters';
+  }
+
+  function rssiLabel(v) {
+    return `${rssiToDistanceLabel(v)} (${v} dBm)`;
+  }
 
   function updateSliderFill(el) {
     const min = parseFloat(el.min);
@@ -19,11 +31,29 @@
     el.style.background = `linear-gradient(to right, #007aff 0%, #007aff ${pct}%, var(--toggle-off) ${pct}%, var(--toggle-off) 100%)`;
   }
 
+  function initCollapsible() {
+    document.querySelectorAll('.settings-section[data-section]').forEach(section => {
+      const id     = section.dataset.section;
+      const header = section.querySelector('.section-header');
+      const body   = section.querySelector('.section-body');
+      if (!header || !body) return;
+
+      if (localStorage.getItem(`section-collapsed-${id}`) === 'true') {
+        section.classList.add('collapsed');
+      }
+
+      header.addEventListener('click', () => {
+        const willCollapse = !section.classList.contains('collapsed');
+        section.classList.toggle('collapsed');
+        localStorage.setItem(`section-collapsed-${id}`, String(willCollapse));
+      });
+    });
+  }
+
   async function init() {
     try {
       prefs = await api.getPreferences();
     } catch (err) {
-      console.error('Failed to load preferences:', err);
       prefs = {};
       return;
     }
@@ -39,7 +69,6 @@
       prefs.selectedDeviceName = name;
     };
 
-    // Populate controls
     $('rssi-threshold').value  = prefs.rssiThreshold;
     $('rssi-val').textContent  = rssiLabel(prefs.rssiThreshold);
     $('lock-delay').value      = prefs.lockDelaySec;
@@ -53,11 +82,13 @@
     $('start-minimized').checked = prefs.startMinimized;
     $('notifications').checked   = prefs.notifications;
 
-    bindEvents();
-    startScan();
-
+    // Register IPC listeners BEFORE starting scan to avoid missing early events
     api.onDevicesUpdated(devices => deviceList.setDevices(devices));
     api.onRssiUpdate(({ rssi, status }) => signalMeter.update(rssi, status));
+
+    bindEvents();
+    initCollapsible();
+    await startScan();
 
     window.addEventListener('beforeunload', () => {
       if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
@@ -78,16 +109,22 @@
     });
     $('lock-now-btn').addEventListener('click', () => api.lockNow());
     $('save-btn').addEventListener('click', save);
+    $('show-unnamed').addEventListener('change', e => {
+      deviceList.setShowUnnamed(e.target.checked);
+    });
   }
 
   async function startScan() {
-    // Clear any pending auto-stop before starting a fresh scan
     if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
     scanning = true;
     $('scan-btn').textContent = 'Stop';
     deviceList.setScanning(true);
     await api.startScan();
-    // auto-stop after 15s; main process will resume monitoring scan automatically
+    // Fetch existing snapshot so we show devices that arrived before the IPC round-trip
+    try {
+      const current = await api.getDevices();
+      if (current && current.length > 0) deviceList.setDevices(current);
+    } catch (_) {}
     scanTimer = setTimeout(() => { scanTimer = null; stopScan(); }, 15000);
   }
 
