@@ -15,6 +15,8 @@ const IPC = {
   SELECT_DEVICE: 'device:select',
   LOCK_NOW: 'lock:now',
   ENABLE_TOGGLE: 'enable:toggle',
+  SAVE_DEVICE: 'device:save',
+  REMOVE_DEVICE: 'device:remove',
 };
 
 contextBridge.exposeInMainWorld('proximityLock', {
@@ -26,6 +28,8 @@ contextBridge.exposeInMainWorld('proximityLock', {
   selectDevice:    (device) => ipcRenderer.invoke(IPC.SELECT_DEVICE, device),
   lockNow:         ()       => ipcRenderer.invoke(IPC.LOCK_NOW),
   enableToggle:    ()       => ipcRenderer.invoke(IPC.ENABLE_TOGGLE),
+  saveDevice:      (device) => ipcRenderer.invoke(IPC.SAVE_DEVICE, device),
+  removeDevice:    (device) => ipcRenderer.invoke(IPC.REMOVE_DEVICE, device),
 
   onDevicesUpdated: (cb) => ipcRenderer.on(IPC.DEVICES_UPDATED, (_e, d) => cb(d)),
   onRssiUpdate:     (cb) => ipcRenderer.on(IPC.DEVICE_RSSI_UPDATE, (_e, d) => cb(d)),

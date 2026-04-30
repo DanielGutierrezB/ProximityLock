@@ -14,6 +14,7 @@ const schema = {
   showInDock:         { type: 'boolean', default: false },
   startMinimized:     { type: 'boolean', default: true },
   notifications:      { type: 'boolean', default: true },
+  savedDevices:       { type: 'array',   default: [] },
 };
 
 module.exports = new Store({ schema });

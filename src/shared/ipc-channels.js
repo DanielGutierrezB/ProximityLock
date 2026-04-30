@@ -11,6 +11,8 @@ const IPC = {
   SELECT_DEVICE: 'device:select',
   LOCK_NOW: 'lock:now',
   ENABLE_TOGGLE: 'enable:toggle',
+  SAVE_DEVICE: 'device:save',
+  REMOVE_DEVICE: 'device:remove',
 };
 
 module.exports = { IPC };

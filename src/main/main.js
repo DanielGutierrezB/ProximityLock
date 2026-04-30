@@ -25,13 +25,13 @@ function openPrefsWindow() {
     return;
   }
   prefsWindow = new BrowserWindow({
-    width: 620,
-    height: 780,
-    minHeight: 680,
+    width: 900,
+    height: 560,
+    minWidth: 680,
+    minHeight: 450,
     title: 'ProximityLock',
     resizable: true,
     minimizable: true,
-    maximizable: false,
     show: false,
     vibrancy: 'under-window',
     transparent: true,
@@ -154,6 +154,21 @@ function toggleEnabled() {
 }
 
 ipcMain.handle(IPC.ENABLE_TOGGLE, toggleEnabled);
+
+ipcMain.handle(IPC.SAVE_DEVICE, (_e, { id, name }) => {
+  const saved = store.get('savedDevices') || [];
+  if (!saved.find(d => d.id === id)) {
+    saved.push({ id, name, addedAt: Date.now() });
+    store.set('savedDevices', saved);
+  }
+  return store.get('savedDevices');
+});
+
+ipcMain.handle(IPC.REMOVE_DEVICE, (_e, { id }) => {
+  const saved = (store.get('savedDevices') || []).filter(d => d.id !== id);
+  store.set('savedDevices', saved);
+  return saved;
+});
 
 // ── Bluetooth events ──────────────────────────────────────────────────────────
 

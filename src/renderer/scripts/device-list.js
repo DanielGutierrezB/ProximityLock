@@ -16,6 +16,7 @@
       this.statusEl    = document.getElementById(statusId);
       this.devices     = [];
       this.selectedId  = null;
+      this.savedIds    = new Set();
       this.onSelect    = null;
       this._scanning   = false;
       this.showUnnamed = false;
@@ -32,10 +33,15 @@
       this._render();
     }
 
+    setSavedIds(ids) {
+      this.savedIds = ids instanceof Set ? ids : new Set(ids);
+      this._render();
+    }
+
     setScanning(scanning) {
       this._scanning = scanning;
       this._updateStatus();
-      this._render(); // refresh empty-state message text when scan state changes
+      this._render();
     }
 
     setShowUnnamed(show) {
@@ -110,6 +116,7 @@
         const nameHtml = named
           ? escHtml(d.name)
           : `<span class="unnamed-label">Unknown</span>`;
+        const isSaved = this.savedIds.has(d.id);
         return `<div class="device-item ${d.id === this.selectedId ? 'selected' : ''}" data-id="${escHtml(d.id)}" data-name="${escHtml(d.name)}">` +
           `<span class="device-icon">${this._deviceIcon(d.name)}</span>` +
           `<div class="device-info">` +
@@ -117,6 +124,7 @@
           `<div class="device-addr">${escHtml(d.address || d.id)}</div>` +
           `</div>` +
           this._signalBars(d.rssi ?? -100) +
+          (isSaved ? `<span class="scan-saved-badge">Added</span>` : '') +
           `</div>`;
       }).join('');
 
