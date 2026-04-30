@@ -42,14 +42,20 @@
     <!-- Threshold controls -->
     <div class="card cam-threshold-card">
       <div class="threshold-row">
-        <label>Match threshold</label>
+        <div class="threshold-label">
+          <label>Match threshold</label>
+          <span class="threshold-desc">Minimum similarity % to count as "you". Lower = more lenient.</span>
+        </div>
         <div class="threshold-control">
           <input type="range" id="match-threshold" min="20" max="80" step="5" value="35">
           <span class="slider-val" id="match-threshold-val">35%</span>
         </div>
       </div>
       <div class="threshold-row">
-        <label>Lock delay</label>
+        <div class="threshold-label">
+          <label>Lock delay</label>
+          <span class="threshold-desc">Seconds without your face before locking the screen.</span>
+        </div>
         <div class="threshold-control">
           <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
           <span class="slider-val" id="camera-lock-delay-val">— s</span>

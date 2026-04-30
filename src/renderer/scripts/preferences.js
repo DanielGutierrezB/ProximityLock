@@ -11,7 +11,7 @@
   let noFaceAt = null;
   let consecutiveMisses = 0;
   const MISS_THRESHOLD = 3;
-  const CAMERA_LOCK_COOLDOWN_MS = 30000;
+  const CAMERA_LOCK_COOLDOWN_MS = 15000; // 15s cooldown after locking
   let lastCameraLockAt = 0;
   let cameraTimerUpdateId = null;
   let previewOn = prefs.showCameraPreview !== false; // default ON
@@ -65,7 +65,13 @@
         statusEl.className = 'detection-status-text face-detected';
       }
       if (timerEl) timerEl.textContent = '';
+      api.faceStatus({ matched: true });
       return;
+    }
+
+    // Update tray to red when not matched
+    if (consecutiveMisses >= MISS_THRESHOLD) {
+      api.faceStatus({ matched: false });
     }
 
     consecutiveMisses++;

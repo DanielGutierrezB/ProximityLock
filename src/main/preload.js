@@ -21,6 +21,7 @@ const IPC = {
   ENABLE_TOGGLE:    'enable:toggle',
   FACE_ENROLL:      'face:enroll',
   FACE_GET:         'face:get',
+  FACE_STATUS:      'face:status',
 };
 
 contextBridge.exposeInMainWorld('proximityLock', {
@@ -30,4 +31,5 @@ contextBridge.exposeInMainWorld('proximityLock', {
   enableToggle:    ()       => ipcRenderer.invoke(IPC.ENABLE_TOGGLE),
   faceEnroll:      (data)   => ipcRenderer.invoke(IPC.FACE_ENROLL, data),
   faceGet:         ()       => ipcRenderer.invoke(IPC.FACE_GET),
+  faceStatus:      (status) => ipcRenderer.send(IPC.FACE_STATUS, status),
 });

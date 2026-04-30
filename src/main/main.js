@@ -89,16 +89,22 @@ function toggleEnabled() {
   tray.setEnabled(next);
   if (!next) {
     lockMgr.cancelLock();
-    tray.updateStatus(STATUS.DISABLED, null, null);
+    tray.updateStatus(STATUS.DISABLED);
     console.log('[LOCK] Monitoring PAUSED');
   } else {
     console.log('[LOCK] Monitoring RESUMED');
-    tray.updateStatus(STATUS.CONNECTED, 'Camera', null);
+    tray.updateStatus(STATUS.CONNECTED);
   }
   return next;
 }
 
 ipcMain.handle(IPC.ENABLE_TOGGLE, toggleEnabled);
+
+// Face status from renderer → update tray icon
+ipcMain.on(IPC.FACE_STATUS, (_e, { matched }) => {
+  if (!store.get('enabled')) return;
+  tray.updateStatus(matched ? STATUS.CONNECTED : STATUS.DISCONNECTED);
+});
 
 // ── Lock events ───────────────────────────────────────────────────────────────
 

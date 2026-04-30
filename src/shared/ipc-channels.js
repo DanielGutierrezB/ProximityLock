@@ -8,5 +8,6 @@ module.exports = {
     ENABLE_TOGGLE:    'enable:toggle',
     FACE_ENROLL:      'face:enroll',
     FACE_GET:         'face:get',
+    FACE_STATUS:      'face:status',
   },
 };
