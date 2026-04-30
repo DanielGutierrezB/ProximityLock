@@ -5,10 +5,11 @@
   "main": "src/main/main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "electron-builder --dir",
+    "build": "electron-builder",
     "dist": "electron-builder",
     "dist:arm64": "electron-builder --arm64",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "build:dir": "electron-builder --dir"
   },
   "build": {
     "appId": "com.danielgutierrez.proximitylock",
@@ -38,7 +39,6 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": {
-        "NSBluetoothAlwaysUsageDescription": "ProximityLock needs Bluetooth to monitor your device proximity and lock your Mac.",
         "NSCameraUsageDescription": "ProximityLock uses the camera for face detection to lock your Mac when you leave.",
         "LSUIElement": true
       }
