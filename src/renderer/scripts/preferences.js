@@ -37,15 +37,16 @@
     const video = $('camera-preview-video');
     const off = $('cam-preview-off');
     const btn = $('preview-toggle-btn');
+    const offText = off ? off.querySelector('.cam-off-text') : null;
     if (previewOn && cameraActive) {
-      video.style.display = '';
-      off.style.display = 'none';
-      btn.textContent = '👁 Preview On';
+      if (video) video.style.display = '';
+      if (off) off.style.display = 'none';
+      if (btn) btn.textContent = '👁 Preview On';
     } else {
-      video.style.display = 'none';
-      off.style.display = '';
-      off.querySelector('.cam-off-text').textContent = cameraActive ? 'Preview off — detection active' : 'Camera off — click Start Monitoring';
-      btn.textContent = '👁 Preview Off';
+      if (video) video.style.display = 'none';
+      if (off) off.style.display = '';
+      if (offText) offText.textContent = cameraActive ? 'Preview off — detection active' : 'Camera off — click Start Monitoring';
+      if (btn) btn.textContent = '👁 Preview Off';
     }
   }
 
@@ -111,8 +112,22 @@
 
   async function populateCameraList() {
     try {
+      // Request temporary access to get camera labels (required by browsers/Electron)
+      let tempStream = null;
+      try {
+        tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch (_) {
+        // Permission denied or no camera — still try to enumerate
+      }
+
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(d => d.kind === 'videoinput');
+
+      // Release temp stream immediately
+      if (tempStream) {
+        tempStream.getTracks().forEach(t => t.stop());
+      }
+
       const select = $('camera-select');
       const savedId = prefs.selectedCameraId || '';
       select.innerHTML = '<option value="">Select a camera…</option>';
@@ -123,6 +138,7 @@
         if (cam.deviceId === savedId) opt.selected = true;
         select.appendChild(opt);
       });
+      console.log('[Camera] Found', cameras.length, 'cameras');
     } catch (e) {
       console.error('[Camera] enumerate failed:', e.message);
     }
