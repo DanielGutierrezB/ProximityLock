@@ -51,11 +51,13 @@
 
   function rssiToDistanceLabel(dBm) {
     const v = parseInt(dBm, 10);
-    if (v >= -50) return '≈ 1 meter';
-    if (v >= -60) return '≈ 2 meters';
-    if (v >= -70) return '≈ 5 meters';
-    if (v >= -80) return '≈ 8 meters';
-    return '≈ 10+ meters';
+    if (v >= -55) return '≈ 0.5 m';
+    if (v >= -60) return '≈ 1 m';
+    if (v >= -65) return '≈ 1.5 m';
+    if (v >= -70) return '≈ 2.5 m';
+    if (v >= -75) return '≈ 3 m';
+    if (v >= -80) return '≈ 4 m';
+    return '≈ 5 m';
   }
 
   function rssiLabel(v) {

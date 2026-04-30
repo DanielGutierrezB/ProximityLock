@@ -140,7 +140,7 @@ ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
   }
   // Clamp numeric values to valid ranges
   const threshold = store.get('rssiThreshold');
-  if (threshold < -100 || threshold > -40) store.set('rssiThreshold', -70);
+  if (threshold < -85 || threshold > -55) store.set('rssiThreshold', -75);
   const delay = store.get('lockDelaySec');
   if (delay < 1 || delay > 15) store.set('lockDelaySec', 3);
 
