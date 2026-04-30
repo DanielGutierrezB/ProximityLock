@@ -127,6 +127,33 @@ body {
 .detection-status-text.error { color: var(--red); }
 .detection-timer { color: var(--text-secondary); font-size: 11px; }
 
+/* ── Preview toggle row ── */
+.cam-preview-toggle-row {
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+}
+.btn-block { width: 100%; text-align: center; }
+
+/* ── Threshold controls ── */
+.cam-threshold-card { padding: 10px 12px; }
+.threshold-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.threshold-row:last-child { margin-bottom: 0; }
+.threshold-row label { font-size: 11px; color: var(--text-secondary); white-space: nowrap; min-width: 90px; }
+.threshold-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.threshold-control input[type="range"] { flex: 1; }
+.threshold-control .slider-val { min-width: 30px; text-align: right; font-size: 11px; }
+
 /* ── Enrollment ── */
 .cam-enroll-card { padding: 10px 12px; }
 .cam-enroll-row { display: flex; align-items: center; gap: 10px; }

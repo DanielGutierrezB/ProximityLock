@@ -165,6 +165,7 @@
         showEnrolledFace(faceData.photo);
       }
 
+      faceDetector.SIMILARITY_THRESHOLD = (prefs.matchThreshold || 35) / 100;
       faceDetector.onFaceStatus = onFaceStatus;
       const intervalMs = parseFloat($('camera-check-interval').value || '1') * 1000;
       const selectedCamera = $('camera-select')?.value || prefs.selectedCameraId || undefined;
@@ -241,6 +242,8 @@
   $('camera-lock-delay-val').textContent = delayLabel(prefs.cameraLockDelay || 10);
   $('camera-check-interval').value = prefs.cameraCheckInterval || 1;
   $('camera-check-interval-val').textContent = intervalLabel(prefs.cameraCheckInterval || 1);
+  $('match-threshold').value = prefs.matchThreshold || 35;
+  $('match-threshold-val').textContent = (prefs.matchThreshold || 35) + '%';
 
   // Toggles
   $('start-on-login').checked = prefs.startOnLogin || false;
@@ -271,6 +274,13 @@
   // Sliders
   $('camera-lock-delay').addEventListener('input', e => {
     $('camera-lock-delay-val').textContent = delayLabel(e.target.value);
+    api.savePreferences({ cameraLockDelay: parseFloat(e.target.value) });
+  });
+  $('match-threshold').addEventListener('input', e => {
+    const val = parseInt(e.target.value);
+    $('match-threshold-val').textContent = val + '%';
+    api.savePreferences({ matchThreshold: val });
+    if (faceDetector) faceDetector.SIMILARITY_THRESHOLD = val / 100;
   });
   $('camera-check-interval').addEventListener('input', e => {
     $('camera-check-interval-val').textContent = intervalLabel(e.target.value);

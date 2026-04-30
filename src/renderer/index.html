@@ -34,6 +34,27 @@
         <span class="detection-status-text" id="detection-status-text">Idle</span>
         <span class="detection-timer" id="detection-timer"></span>
       </div>
+      <div class="cam-preview-toggle-row">
+        <button class="btn btn-secondary btn-block" id="preview-toggle-btn">👁 Preview Off</button>
+      </div>
+    </div>
+
+    <!-- Threshold controls -->
+    <div class="card cam-threshold-card">
+      <div class="threshold-row">
+        <label>Match threshold</label>
+        <div class="threshold-control">
+          <input type="range" id="match-threshold" min="20" max="80" step="5" value="35">
+          <span class="slider-val" id="match-threshold-val">35%</span>
+        </div>
+      </div>
+      <div class="threshold-row">
+        <label>Lock delay</label>
+        <div class="threshold-control">
+          <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
+          <span class="slider-val" id="camera-lock-delay-val">— s</span>
+        </div>
+      </div>
     </div>
 
     <!-- Enrollment -->
@@ -54,7 +75,6 @@
 
     <!-- Actions -->
     <div class="cam-actions">
-      <button class="btn btn-sm btn-secondary" id="preview-toggle-btn">👁 Preview</button>
       <button class="btn btn-sm btn-success" id="monitoring-toggle-btn">▶ Start Monitoring</button>
       <button class="btn btn-sm btn-danger" id="lock-now-btn">🔒 Lock Now</button>
     </div>
@@ -69,15 +89,7 @@
         <button class="settings-close" id="settings-close-btn">✕</button>
       </div>
       <div class="settings-panel-body">
-        <h4>Face Detection</h4>
-        <div class="slider-row">
-          <div class="slider-header">
-            <label for="camera-lock-delay">Lock after no face for</label>
-            <span class="slider-val" id="camera-lock-delay-val">— s</span>
-          </div>
-          <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
-          <div class="slider-labels"><span>3 s</span><span>15 s</span><span>30 s</span></div>
-        </div>
+        <h4>Detection</h4>
         <div class="slider-row">
           <div class="slider-header">
             <label for="camera-check-interval">Check every</label>
