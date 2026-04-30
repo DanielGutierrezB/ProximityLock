@@ -1,12 +1,13 @@
 'use strict';
 
-const { Tray, Menu, nativeImage } = require('electron');
+const { Tray, BrowserWindow, nativeImage, screen } = require('electron');
+const path = require('path');
 
 const STATUS = {
-  CONNECTED: 'connected',       // face matched
-  DISCONNECTED: 'disconnected', // no face / unknown
-  DISABLED: 'disabled',         // monitoring off
-  IDLE: 'idle',                 // no camera started
+  CONNECTED: 'connected',
+  DISCONNECTED: 'disconnected',
+  DISABLED: 'disabled',
+  IDLE: 'idle',
 };
 
 function createColorCircleIcon(r, g, b) {
@@ -39,11 +40,14 @@ function createColorCircleIcon(r, g, b) {
 }
 
 const ICON_CACHE = {
-  [STATUS.CONNECTED]:    createColorCircleIcon(52, 199, 89),   // green
-  [STATUS.DISCONNECTED]: createColorCircleIcon(255, 59, 48),   // red
-  [STATUS.DISABLED]:     createColorCircleIcon(142, 142, 147), // gray
-  [STATUS.IDLE]:         createColorCircleIcon(142, 142, 147), // gray
+  [STATUS.CONNECTED]:    createColorCircleIcon(52, 199, 89),
+  [STATUS.DISCONNECTED]: createColorCircleIcon(255, 59, 48),
+  [STATUS.DISABLED]:     createColorCircleIcon(142, 142, 147),
+  [STATUS.IDLE]:         createColorCircleIcon(142, 142, 147),
 };
+
+const POPUP_WIDTH  = 280;
+const POPUP_HEIGHT = 340;
 
 class TrayManager {
   constructor() {
@@ -51,60 +55,100 @@ class TrayManager {
     this.status = STATUS.IDLE;
     this.enabled = false;
     this.callbacks = {};
+    this.popupWindow = null;
+    this._lastBlurTime = 0;
   }
 
   init(callbacks) {
     this.callbacks = callbacks;
     this.tray = new Tray(ICON_CACHE[STATUS.IDLE]);
     this.tray.setToolTip('ProximityLock');
-    this.tray.on('right-click', () => this.tray.popUpContextMenu());
-    this._rebuildMenu();
+    this.tray.on('click', () => this._togglePopup());
+    this.tray.on('right-click', () => this._togglePopup());
   }
 
   updateStatus(status) {
     this.status = status;
     this.tray?.setImage(ICON_CACHE[status] ?? ICON_CACHE[STATUS.IDLE]);
-    this._rebuildMenu();
   }
 
   setEnabled(enabled) {
     this.enabled = enabled;
-    this._rebuildMenu();
   }
 
-  _statusLabel() {
-    if (!this.enabled) return '⚫ Monitoring off';
-    switch (this.status) {
-      case STATUS.CONNECTED:    return '🟢 Face matched';
-      case STATUS.DISCONNECTED: return '🔴 No face detected';
-      default:                  return '⚫ Idle';
+  sendFaceStatus(data) {
+    if (this.popupWindow && !this.popupWindow.isDestroyed() && this.popupWindow.isVisible()) {
+      this.popupWindow.webContents.send('popup:face-status', data);
     }
   }
 
-  _rebuildMenu() {
-    const menu = Menu.buildFromTemplate([
-      { label: this._statusLabel(), enabled: false },
-      { type: 'separator' },
-      {
-        label: this.enabled ? '⏹ Stop Monitoring' : '▶ Start Monitoring',
-        click: () => this.callbacks.onToggle?.(),
+  _togglePopup() {
+    // If popup just lost focus (user clicked tray to close it), don't reopen
+    if (Date.now() - this._lastBlurTime < 300) return;
+
+    if (this.popupWindow && !this.popupWindow.isDestroyed()) {
+      if (this.popupWindow.isVisible()) {
+        this.popupWindow.hide();
+      } else {
+        this._positionAndShow();
+      }
+    } else {
+      this._createPopup();
+    }
+  }
+
+  _createPopup() {
+    this.popupWindow = new BrowserWindow({
+      width: POPUP_WIDTH,
+      height: POPUP_HEIGHT,
+      show: false,
+      frame: false,
+      resizable: false,
+      movable: false,
+      alwaysOnTop: true,
+      fullscreenable: false,
+      skipTaskbar: true,
+      transparent: true,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: false,
+        preload: path.join(__dirname, 'preload.js'),
       },
-      {
-        label: '🔒 Lock Now',
-        click: () => this.callbacks.onLockNow?.(),
-      },
-      { type: 'separator' },
-      {
-        label: 'Open ProximityLock',
-        click: () => this.callbacks.onOpenPrefs?.(),
-      },
-      { type: 'separator' },
-      {
-        label: 'Quit',
-        click: () => this.callbacks.onQuit?.(),
-      },
-    ]);
-    this.tray?.setContextMenu(menu);
+    });
+
+    this.popupWindow.loadFile(path.join(__dirname, '../renderer/tray-popup.html'));
+
+    this.popupWindow.on('blur', () => {
+      this._lastBlurTime = Date.now();
+      if (this.popupWindow && !this.popupWindow.isDestroyed()) {
+        this.popupWindow.hide();
+      }
+    });
+    this.popupWindow.on('closed', () => { this.popupWindow = null; });
+    this.popupWindow.once('ready-to-show', () => {
+      this._positionAndShow();
+    });
+  }
+
+  _positionAndShow() {
+    if (!this.popupWindow || this.popupWindow.isDestroyed()) return;
+    const trayBounds = this.tray.getBounds();
+    const { x: areaX, width: areaW } = screen.getDisplayNearestPoint({
+      x: trayBounds.x,
+      y: trayBounds.y,
+    }).workArea;
+
+    // Center popup horizontally on tray icon, appear just below menu bar
+    let x = Math.round(trayBounds.x + trayBounds.width / 2 - POPUP_WIDTH / 2);
+    const y = Math.round(trayBounds.y + trayBounds.height + 4);
+
+    // Clamp to screen horizontal bounds
+    x = Math.max(areaX, Math.min(x, areaX + areaW - POPUP_WIDTH));
+
+    this.popupWindow.setPosition(x, y, false);
+    this.popupWindow.show();
+    this.popupWindow.focus();
   }
 }
 

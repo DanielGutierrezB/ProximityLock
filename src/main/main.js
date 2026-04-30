@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, powerMonitor } = require('electron');
 const path = require('path');
 
 const store      = require('./preferences-store');
@@ -63,7 +63,6 @@ ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
   return true;
 });
 
-// Face enrollment
 ipcMain.handle(IPC.FACE_ENROLL, (_e, { descriptor, photo }) => {
   store.set('faceDescriptor', descriptor);
   store.set('facePhoto', photo);
@@ -83,6 +82,15 @@ ipcMain.handle(IPC.LOCK_NOW, () => {
   return true;
 });
 
+ipcMain.handle(IPC.OPEN_PREFS, () => {
+  openPrefsWindow();
+  return true;
+});
+
+ipcMain.handle(IPC.QUIT, () => {
+  app.quit();
+});
+
 function toggleEnabled() {
   const next = !store.get('enabled');
   store.set('enabled', next);
@@ -100,10 +108,11 @@ function toggleEnabled() {
 
 ipcMain.handle(IPC.ENABLE_TOGGLE, toggleEnabled);
 
-// Face status from renderer → update tray icon
-ipcMain.on(IPC.FACE_STATUS, (_e, { matched }) => {
+// Face status from renderer → update tray icon + forward to popup
+ipcMain.on(IPC.FACE_STATUS, (_e, { matched, similarity }) => {
   if (!store.get('enabled')) return;
   tray.updateStatus(matched ? STATUS.CONNECTED : STATUS.DISCONNECTED);
+  tray.sendFaceStatus({ matched, similarity: similarity || 0 });
 });
 
 // ── Lock events ───────────────────────────────────────────────────────────────
@@ -132,6 +141,13 @@ app.whenReady().then(() => {
     onQuit:      () => app.quit(),
   });
   tray.setEnabled(prefs.enabled);
+
+  powerMonitor.on('lock-screen', () => {
+    prefsWindow?.webContents.send(IPC.SCREEN_LOCKED);
+  });
+  powerMonitor.on('unlock-screen', () => {
+    prefsWindow?.webContents.send(IPC.SCREEN_UNLOCKED);
+  });
 
   openPrefsWindow();
 });

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' file: 'unsafe-eval'; connect-src 'self' blob: file:; worker-src 'self' blob:; media-src 'self' blob:; img-src 'self' data: blob:">
+  <title>ProximityLock</title>
+  <link rel="stylesheet" href="styles/tray-popup.css">
+</head>
+<body>
+
+  <!-- Status -->
+  <div class="section status-section">
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-text" id="status-text">Idle</span>
+  </div>
+
+  <!-- Enrolled face -->
+  <div class="section enroll-section">
+    <div id="enrolled-row" class="enrolled-row" style="display:none">
+      <img id="enrolled-photo" class="enrolled-thumb" alt="">
+      <div class="enrolled-info">
+        <span class="enrolled-label">✅ Face enrolled</span>
+        <button class="btn btn-sm btn-outline" id="retake-btn">📸 Retake</button>
+      </div>
+    </div>
+    <div id="no-enroll-row" class="no-enroll-row">
+      <span class="dim">No face enrolled — open app to enroll</span>
+    </div>
+  </div>
+
+  <!-- Sliders -->
+  <div class="section sliders-section">
+    <div class="slider-row">
+      <div class="slider-header">
+        <label>Match threshold</label>
+        <span class="slider-val" id="popup-match-val">35%</span>
+      </div>
+      <input type="range" id="popup-match-threshold" min="20" max="80" step="5" value="35">
+    </div>
+    <div class="slider-row">
+      <div class="slider-header">
+        <label>Lock delay</label>
+        <span class="slider-val" id="popup-delay-val">10s</span>
+      </div>
+      <input type="range" id="popup-lock-delay" min="3" max="30" step="1" value="10">
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="section action-section">
+    <button class="btn btn-block btn-success" id="popup-monitoring-btn">▶ Start Monitoring</button>
+    <button class="btn btn-block btn-danger" id="popup-lock-btn">🔒 Lock Now</button>
+  </div>
+
+  <!-- Footer -->
+  <div class="section footer-section">
+    <button class="btn btn-sm btn-secondary" id="popup-open-btn">Open App</button>
+    <button class="btn btn-sm btn-danger-outline" id="popup-quit-btn">Quit</button>
+  </div>
+
+  <script src="scripts/tray-popup.js"></script>
+</body>
+</html>

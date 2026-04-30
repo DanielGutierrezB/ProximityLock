@@ -11,10 +11,14 @@
   let noFaceAt = null;
   let consecutiveMisses = 0;
   const MISS_THRESHOLD = 3;
-  const CAMERA_LOCK_COOLDOWN_MS = 15000; // 15s cooldown after locking
+  const CAMERA_LOCK_COOLDOWN_MS = 15000;
   let lastCameraLockAt = 0;
   let cameraTimerUpdateId = null;
-  let previewOn = prefs.showCameraPreview !== false; // default ON
+  let previewOn = prefs.showCameraPreview !== false;
+  let lastFaceRecognized = false;
+  let lastSimilarity = 0;
+  let noFaceLabel = 'No face ⚠️';
+  let wasRunningBeforeLock = false;
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -24,12 +28,28 @@
   function updateMonitoringBtn() {
     const btn = $('monitoring-toggle-btn');
     if (!btn) return;
-    if (monitoring) {
-      btn.textContent = '⏹ Stop Monitoring';
-      btn.className = 'btn btn-sm btn-danger';
-    } else {
+    if (!monitoring) {
       btn.textContent = '▶ Start Monitoring';
       btn.className = 'btn btn-sm btn-success';
+      return;
+    }
+    if (!cameraActive) {
+      btn.textContent = '⏹ Stop Monitoring';
+      btn.className = 'btn btn-sm btn-secondary';
+      return;
+    }
+    if (lastFaceRecognized) {
+      btn.textContent = `🟢 Matched ${lastSimilarity}%`;
+      btn.className = 'btn btn-sm btn-success';
+    } else if (noFaceAt) {
+      const elapsed = (Date.now() - noFaceAt) / 1000;
+      const lockDelaySec = parseFloat($('camera-lock-delay').value);
+      const remaining = Math.max(0, Math.ceil(lockDelaySec - elapsed));
+      btn.textContent = `🔴 Locking in ${remaining}s…`;
+      btn.className = 'btn btn-sm btn-danger';
+    } else {
+      btn.textContent = '⏹ Stop Monitoring';
+      btn.className = 'btn btn-sm btn-secondary';
     }
   }
 
@@ -60,18 +80,20 @@
     if (recognized) {
       consecutiveMisses = 0;
       noFaceAt = null;
+      lastFaceRecognized = true;
+      lastSimilarity = similarity || 0;
       if (statusEl) {
         statusEl.textContent = `You ✅ ${similarity ? similarity + '% match' : ''}`;
         statusEl.className = 'detection-status-text face-detected';
       }
       if (timerEl) timerEl.textContent = '';
-      api.faceStatus({ matched: true });
+      api.faceStatus({ matched: true, similarity: similarity || 0 });
+      updateMonitoringBtn();
       return;
     }
 
-    // Update tray to red when not matched
     if (consecutiveMisses >= MISS_THRESHOLD) {
-      api.faceStatus({ matched: false });
+      api.faceStatus({ matched: false, similarity: 0 });
     }
 
     consecutiveMisses++;
@@ -81,13 +103,20 @@
       return;
     }
 
-    if (detected && !recognized) {
-      if (!noFaceAt) noFaceAt = now;
-      if (statusEl) { statusEl.textContent = 'Unknown face ⚠️'; statusEl.className = 'detection-status-text no-face'; }
-    } else {
-      if (!noFaceAt) noFaceAt = now;
-      if (statusEl) { statusEl.textContent = 'No face detected ⚠️'; statusEl.className = 'detection-status-text no-face'; }
+    lastFaceRecognized = false;
+    lastSimilarity = 0;
+    noFaceLabel = detected ? 'Unknown face ⚠️' : 'No face ⚠️';
+
+    if (!noFaceAt) noFaceAt = now;
+    const elapsedS = Math.floor((now - noFaceAt) / 1000);
+
+    if (statusEl) {
+      statusEl.textContent = `${noFaceLabel} ${elapsedS}s`;
+      statusEl.className = 'detection-status-text no-face';
     }
+    if (timerEl) timerEl.textContent = '';
+
+    updateMonitoringBtn();
 
     const elapsed = (now - noFaceAt) / 1000;
     const lockDelaySec = parseFloat($('camera-lock-delay').value);
@@ -103,10 +132,14 @@
   function startTimerUpdate() {
     if (cameraTimerUpdateId) return;
     cameraTimerUpdateId = setInterval(() => {
-      if (!noFaceAt) return;
-      const elapsed = Math.floor((Date.now() - noFaceAt) / 1000);
-      const timerEl = $('detection-timer');
-      if (timerEl) timerEl.textContent = `${elapsed}s`;
+      if (noFaceAt && !lastFaceRecognized) {
+        const elapsed = Math.floor((Date.now() - noFaceAt) / 1000);
+        const statusEl = $('detection-status-text');
+        if (statusEl && statusEl.classList.contains('no-face')) {
+          statusEl.textContent = `${noFaceLabel} ${elapsed}s`;
+        }
+      }
+      if (monitoring) updateMonitoringBtn();
     }, 500);
   }
 
@@ -118,18 +151,14 @@
 
   async function populateCameraList() {
     try {
-      // Request temporary access to get camera labels (required by browsers/Electron)
       let tempStream = null;
       try {
         tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      } catch (_) {
-        // Permission denied or no camera — still try to enumerate
-      }
+      } catch (_) {}
 
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(d => d.kind === 'videoinput');
 
-      // Release temp stream immediately
       if (tempStream) {
         tempStream.getTracks().forEach(t => t.stop());
       }
@@ -164,7 +193,6 @@
         await faceDetector.init($('camera-preview-video'));
       }
 
-      // Load saved face descriptor
       const faceData = await api.faceGet();
       if (faceData && faceData.descriptor) {
         faceDetector.loadDescriptor(faceData.descriptor);
@@ -195,12 +223,15 @@
     cameraActive = false;
     noFaceAt = null;
     consecutiveMisses = 0;
+    lastFaceRecognized = false;
+    lastSimilarity = 0;
     stopTimerUpdate();
     updatePreviewUI();
     const statusEl = $('detection-status-text');
     if (statusEl) { statusEl.textContent = 'Idle'; statusEl.className = 'detection-status-text'; }
     const timerEl = $('detection-timer');
     if (timerEl) timerEl.textContent = '';
+    updateMonitoringBtn();
   }
 
   // ── Enrollment ────────────────────────────────────────────────────────────
@@ -241,9 +272,34 @@
     overlay.classList.toggle('hidden');
   }
 
+  // ── Screen lock/unlock ────────────────────────────────────────────────────
+
+  api.onScreenLocked(() => {
+    wasRunningBeforeLock = cameraActive;
+    if (cameraActive && faceDetector) {
+      faceDetector.stop();
+      cameraActive = false;
+      noFaceAt = null;
+      consecutiveMisses = 0;
+      lastFaceRecognized = false;
+      lastSimilarity = 0;
+      stopTimerUpdate();
+      updatePreviewUI();
+      updateMonitoringBtn();
+      const statusEl = $('detection-status-text');
+      if (statusEl) { statusEl.textContent = 'Screen locked'; statusEl.className = 'detection-status-text'; }
+    }
+  });
+
+  api.onScreenUnlocked(() => {
+    if (wasRunningBeforeLock) {
+      wasRunningBeforeLock = false;
+      startCamera();
+    }
+  });
+
   // ── Init UI ───────────────────────────────────────────────────────────────
 
-  // Sliders
   $('camera-lock-delay').value = prefs.cameraLockDelay || 10;
   $('camera-lock-delay-val').textContent = delayLabel(prefs.cameraLockDelay || 10);
   $('camera-check-interval').value = prefs.cameraCheckInterval || 1;
@@ -251,7 +307,6 @@
   $('match-threshold').value = prefs.matchThreshold || 35;
   $('match-threshold-val').textContent = (prefs.matchThreshold || 35) + '%';
 
-  // Toggles
   $('start-on-login').checked = prefs.startOnLogin || false;
   $('menu-bar-only').checked = prefs.menuBarOnly !== false;
   $('notifications').checked = prefs.notifications !== false;
@@ -259,16 +314,13 @@
   updateMonitoringBtn();
   updatePreviewUI();
 
-  // Load enrolled face photo if exists
   const faceData = await api.faceGet();
   if (faceData && faceData.photo) {
     showEnrolledFace(faceData.photo);
   }
 
-  // Populate camera list
   await populateCameraList();
 
-  // If a saved camera is selected, auto-start detection
   const savedCamId = $('camera-select').value;
   if (savedCamId) {
     console.log('[UI] Saved camera found, auto-starting:', savedCamId);
@@ -277,7 +329,6 @@
 
   // ── Event listeners ───────────────────────────────────────────────────────
 
-  // Sliders
   $('camera-lock-delay').addEventListener('input', e => {
     $('camera-lock-delay-val').textContent = delayLabel(e.target.value);
     api.savePreferences({ cameraLockDelay: parseFloat(e.target.value) });
@@ -295,7 +346,6 @@
     }
   });
 
-  // Camera selector — auto-start detection when camera is selected
   $('camera-select').addEventListener('change', async () => {
     const camId = $('camera-select').value || '';
     console.log('[UI] Camera selected:', camId);
@@ -303,12 +353,10 @@
     prefs.selectedCameraId = camId;
 
     if (!camId) {
-      // "Select a camera..." chosen — stop everything
       stopCamera();
       return;
     }
 
-    // Start or restart camera with selected device
     if (cameraActive && faceDetector) {
       faceDetector.stop();
       cameraActive = false;
@@ -316,7 +364,6 @@
     await startCamera();
   });
 
-  // Start/Stop Monitoring — only controls LOCKING, not camera
   $('monitoring-toggle-btn').addEventListener('click', async () => {
     if (!monitoring) {
       if (!cameraActive) {
@@ -336,17 +383,14 @@
     updateMonitoringBtn();
   });
 
-  // Preview toggle
   $('preview-toggle-btn').addEventListener('click', () => {
     previewOn = !previewOn;
     api.savePreferences({ showCameraPreview: previewOn });
     updatePreviewUI();
   });
 
-  // Lock Now
   $('lock-now-btn').addEventListener('click', () => api.lockNow());
 
-  // Enrollment
   $('enroll-btn').addEventListener('click', enrollFace);
   $('re-enroll-btn').addEventListener('click', async () => {
     $('enrolled-photo-container').style.display = 'none';
@@ -354,7 +398,6 @@
     await enrollFace();
   });
 
-  // Settings
   $('settings-gear-btn').addEventListener('click', toggleSettings);
   $('settings-close-btn').addEventListener('click', toggleSettings);
   $('settings-overlay').addEventListener('click', e => {
