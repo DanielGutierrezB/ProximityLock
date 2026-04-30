@@ -139,7 +139,7 @@ ipcMain.handle(IPC.GET_PREFERENCES, () => store.store);
 
 ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
   // Whitelist keys to prevent arbitrary writes from renderer
-  const ALLOWED = ['rssiThreshold', 'lockDelaySec', 'startOnLogin', 'menuBarOnly', 'showInDock', 'startMinimized', 'notifications', 'lockMode', 'cameraCheckInterval', 'cameraLockDelay', 'showCameraPreview'];
+  const ALLOWED = ['rssiThreshold', 'lockDelaySec', 'startOnLogin', 'menuBarOnly', 'showInDock', 'startMinimized', 'notifications', 'lockMode', 'cameraCheckInterval', 'cameraLockDelay', 'showCameraPreview', 'selectedCameraId'];
   for (const key of ALLOWED) {
     if (key in prefs) store.set(key, prefs[key]);
   }

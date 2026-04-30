@@ -59,6 +59,18 @@
 
   function delayLabel(v) { return `${v} s`; }
 
+  function updateMonitoringBtn(active) {
+    const btn = $('monitoring-toggle-btn');
+    if (!btn) return;
+    if (active) {
+      btn.textContent = '⏹ Stop Monitoring';
+      btn.className = 'btn btn-danger btn-sm';
+    } else {
+      btn.textContent = '▶ Start Monitoring';
+      btn.className = 'btn btn-success btn-sm';
+    }
+  }
+
   function updatePauseBtn(paused) {
     const btn = $('pause-btn');
     if (paused) {
@@ -336,11 +348,13 @@
       const cameras = devices.filter(d => d.kind === 'videoinput');
       const select = $('camera-select');
       if (!select) return;
+      const savedId = prefs.selectedCameraId || '';
       select.innerHTML = '';
       cameras.forEach((cam, i) => {
         const opt = document.createElement('option');
         opt.value = cam.deviceId;
         opt.textContent = cam.label || `Camera ${i + 1}`;
+        if (cam.deviceId === savedId) opt.selected = true;
         select.appendChild(opt);
       });
     } catch (e) {
@@ -372,7 +386,7 @@
 
       faceDetector.onFaceStatus = onFaceStatus;
       const intervalMs = parseFloat($('camera-check-interval').value || '1') * 1000;
-      const selectedCamera = $('camera-select')?.value || undefined;
+      const selectedCamera = $('camera-select')?.value || prefs.selectedCameraId || undefined;
       await faceDetector.start(intervalMs, selectedCamera);
       await populateCameraList();
 
@@ -541,6 +555,22 @@
       $('preview-toggle-btn').addEventListener('click', togglePreview);
     }
 
+    // Camera mode: Start/Stop Monitoring
+    if ($('monitoring-toggle-btn')) {
+      let camMonitoring = prefs.enabled;
+      updateMonitoringBtn(camMonitoring);
+      $('monitoring-toggle-btn').addEventListener('click', async () => {
+        const newEnabled = await api.enableToggle();
+        camMonitoring = newEnabled;
+        updateMonitoringBtn(camMonitoring);
+      });
+    }
+
+    // Camera mode: Lock Now
+    if ($('lock-now-btn-cam')) {
+      $('lock-now-btn-cam').addEventListener('click', () => api.lockNow());
+    }
+
     // Settings gear / close
     if ($('settings-gear-btn')) {
       $('settings-gear-btn').addEventListener('click', toggleSettingsPanel);
@@ -588,10 +618,12 @@
     // Camera selector — restart camera with new device
     if ($('camera-select')) {
       $('camera-select').addEventListener('change', async () => {
+        const camId = $('camera-select').value || '';
+        api.savePreferences({ selectedCameraId: camId });
         if (cameraActive && faceDetector) {
           faceDetector.stop();
           const intervalMs = parseFloat($('camera-check-interval').value || '1') * 1000;
-          await faceDetector.start(intervalMs, $('camera-select').value || undefined);
+          await faceDetector.start(intervalMs, camId || undefined);
         }
       });
     }

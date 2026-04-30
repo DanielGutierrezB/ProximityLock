@@ -525,6 +525,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
 .btn-danger { background: var(--red); color: white; }
 .btn-warning { background: var(--orange); color: white; }
 .btn-success { background: var(--green); color: white; }
+.btn-sm { font-size: 12px; padding: 6px 12px; }
 
 /* ── About card ── */
 .about-row {

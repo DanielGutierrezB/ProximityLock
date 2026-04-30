@@ -19,6 +19,7 @@ const schema = {
   cameraCheckInterval:{ type: 'number',  default: 1 },
   cameraLockDelay:    { type: 'number',  default: 10 },
   showCameraPreview:  { type: 'boolean', default: false },
+  selectedCameraId:   { type: 'string',  default: '' },
   faceDescriptor:     { type: ['array', 'null'],  default: null },
   facePhoto:          { type: ['string', 'null'], default: null },
 };
