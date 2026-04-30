@@ -27,10 +27,11 @@ class LockManager extends EventEmitter {
   }
 
   lockNow() {
-    // Try CGSession first (most reliable on macOS), then fallback
-    const cgSession = '/System/Library/CoreServices/Menu\\ Extras/User.menu/Contents/Resources/CGSession -suspend';
-    exec(cgSession, (err) => {
+    // Modern macOS: launch ScreenSaverEngine (locks if password-on-wake is enabled)
+    // Then fallback to pmset displaysleepnow
+    exec('open -a ScreenSaverEngine', (err) => {
       if (err) {
+        console.error('lock: ScreenSaverEngine failed:', err.message);
         exec('pmset displaysleepnow', (err2) => {
           if (err2) console.error('lock: pmset fallback failed:', err2.message);
         });

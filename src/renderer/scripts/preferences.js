@@ -5,6 +5,7 @@
   let deviceList, signalMeter;
   let scanning = false;
   let scanTimer = null;
+  let pollTimer = null;
   let prefs = {};
 
   function $(id) { return document.getElementById(id); }
@@ -83,7 +84,10 @@
     $('notifications').checked   = prefs.notifications;
 
     // Register IPC listeners BEFORE starting scan to avoid missing early events
-    api.onDevicesUpdated(devices => deviceList.setDevices(devices));
+    api.onDevicesUpdated(devices => {
+      console.log('[Renderer] Devices updated, count:', devices.length, devices.filter(d => d.name && d.name !== 'Unknown Device').map(d => d.name));
+      deviceList.setDevices(devices);
+    });
     api.onRssiUpdate(({ rssi, status }) => signalMeter.update(rssi, status));
 
     bindEvents();
@@ -114,26 +118,39 @@
     });
   }
 
+  async function pollDevices() {
+    try {
+      const devices = await api.getDevices();
+      if (devices && devices.length > 0) {
+        console.log('[Renderer] Poll found', devices.length, 'devices');
+        deviceList.setDevices(devices);
+      }
+    } catch (_) {}
+  }
+
   async function startScan() {
     if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     scanning = true;
     $('scan-btn').textContent = 'Stop';
     deviceList.setScanning(true);
     await api.startScan();
-    // Fetch existing snapshot so we show devices that arrived before the IPC round-trip
-    try {
-      const current = await api.getDevices();
-      if (current && current.length > 0) deviceList.setDevices(current);
-    } catch (_) {}
+    // Poll for devices every 2s as fallback (IPC push may miss events)
+    pollTimer = setInterval(pollDevices, 2000);
+    // Also fetch immediately
+    setTimeout(pollDevices, 500);
     scanTimer = setTimeout(() => { scanTimer = null; stopScan(); }, 15000);
   }
 
   async function stopScan() {
     if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     scanning = false;
     $('scan-btn').textContent = 'Scan';
     deviceList.setScanning(false);
     await api.stopScan();
+    // Final poll to get latest state
+    await pollDevices();
   }
 
   async function save() {

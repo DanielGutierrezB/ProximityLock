@@ -17,6 +17,7 @@ class BluetoothManager extends EventEmitter {
   }
 
   _onStateChange(state) {
+    console.log('[BLE] State changed:', state);
     this.bluetoothState = state;
     this.emit('stateChange', state);
     if (state === 'poweredOn') {
@@ -33,6 +34,7 @@ class BluetoothManager extends EventEmitter {
       lastSeen: Date.now(),
     };
     this.devices.set(peripheral.id, device);
+    console.log('[BLE] Discovered:', device.name, 'RSSI:', device.rssi, 'Total:', this.devices.size);
     this.emit('deviceDiscovered', device);
     if (peripheral.id === this.monitoredDeviceId) {
       this.emit('rssiUpdate', device);
@@ -63,9 +65,11 @@ class BluetoothManager extends EventEmitter {
   }
 
   getDeviceList() {
-    // Filter out stale devices older than 30 seconds
-    const cutoff = Date.now() - 30000;
-    return Array.from(this.devices.values()).filter(d => d.lastSeen > cutoff);
+    // Filter out stale devices older than 60 seconds
+    const cutoff = Date.now() - 60000;
+    const all = Array.from(this.devices.values());
+    const fresh = all.filter(d => d.lastSeen > cutoff);
+    return fresh;
   }
 
   clearDevices() {

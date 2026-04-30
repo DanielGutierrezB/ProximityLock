@@ -43,7 +43,14 @@ function openPrefsWindow() {
     },
   });
   prefsWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-  prefsWindow.once('ready-to-show', () => prefsWindow.show());
+  // Forward renderer console to main process stdout
+  prefsWindow.webContents.on('console-message', (_e, level, msg) => {
+    console.log('[RENDERER]', msg);
+  });
+  prefsWindow.once('ready-to-show', () => {
+    prefsWindow.show();
+    prefsWindow.webContents.openDevTools({ mode: 'detach' });
+  });
   prefsWindow.on('closed', () => { prefsWindow = null; });
 }
 
@@ -104,6 +111,8 @@ ipcMain.handle(IPC.GET_DEVICES, () => bluetooth.getDeviceList());
 
 ipcMain.handle(IPC.START_SCAN, () => {
   bluetooth.clearDevices();
+  // Stop first so startScanning() doesn't bail due to this.scanning === true
+  bluetooth.stopScanning();
   bluetooth.startScanning();
   return true;
 });
