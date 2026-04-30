@@ -523,6 +523,8 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   border: 1px solid var(--border);
 }
 .btn-danger { background: var(--red); color: white; }
+.btn-warning { background: var(--orange); color: white; }
+.btn-success { background: var(--green); color: white; }
 
 /* ── About card ── */
 .about-row {

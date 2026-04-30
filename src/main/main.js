@@ -75,6 +75,8 @@ function smoothRssi(rawRssi) {
 // Hysteresis: once we go below threshold, require rssi to go ABOVE threshold+HYSTERESIS to cancel
 const HYSTERESIS_DB = 5;
 let isLocking = false;  // true once we crossed below threshold
+let lastLockedAt = 0;   // timestamp of last lock, for cooldown
+const LOCK_COOLDOWN_MS = 30000; // don't re-lock for 30s after locking
 
 function handleRssiUpdate(rawRssi) {
   const { enabled, selectedDeviceId, rssiThreshold, lockDelaySec } = store.store;
@@ -117,8 +119,10 @@ function handleRssiUpdate(rawRssi) {
       console.log('[LOCK] Below threshold! smoothed:', rssi, 'raw:', rawRssi, 'threshold:', rssiThreshold);
     }
     const elapsed = (Date.now() - belowThresholdAt) / 1000;
-    if (elapsed >= lockDelaySec && !lockMgr.isLockPending) {
+    const cooldownRemaining = LOCK_COOLDOWN_MS - (Date.now() - lastLockedAt);
+    if (elapsed >= lockDelaySec && !lockMgr.isLockPending && cooldownRemaining <= 0) {
       console.log('[LOCK] >>> LOCKING NOW <<< after', elapsed.toFixed(1), 's');
+      lastLockedAt = Date.now();
       lockMgr.scheduleLock(0);
     }
   } else {
@@ -191,8 +195,13 @@ function toggleEnabled() {
   tray.setEnabled(next);
   if (!next) {
     lockMgr.cancelLock();
+    belowThresholdAt = null;
+    isLocking = false;
+    lastLockedAt = 0;
     tray.updateStatus(STATUS.DISABLED, null, null);
+    console.log('[LOCK] Monitoring PAUSED');
   } else {
+    console.log('[LOCK] Monitoring RESUMED');
     bluetooth.startScanning();
   }
   return next;
@@ -233,7 +242,7 @@ bluetooth.on('stateChange', (state) => {
 });
 
 lockMgr.on('locked', () => {
-  belowThresholdAt = null; // allow re-lock after user unlocks while still away
+  // Don't reset belowThresholdAt — cooldown timer prevents re-lock spam
   if (store.get('notifications')) {
     new Notification({
       title: 'ProximityLock',

@@ -49,6 +49,17 @@
 
   function delayLabel(v) { return `${v} s`; }
 
+  function updatePauseBtn(paused) {
+    const btn = $('pause-btn');
+    if (paused) {
+      btn.textContent = '▶ Resume Monitoring';
+      btn.className = 'btn btn-success';
+    } else {
+      btn.textContent = '⏸ Pause Monitoring';
+      btn.className = 'btn btn-warning';
+    }
+  }
+
   function rssiToDistanceLabel(dBm) {
     const v = parseInt(dBm, 10);
     if (v >= -55) return '≈ 0.5 m';
@@ -270,6 +281,15 @@
     });
     $('lock-now-btn').addEventListener('click', () => api.lockNow());
     $('save-btn').addEventListener('click', save);
+
+    // Pause/Resume monitoring
+    let monitoringPaused = !prefs.enabled;
+    updatePauseBtn(monitoringPaused);
+    $('pause-btn').addEventListener('click', async () => {
+      const newEnabled = await api.enableToggle();
+      monitoringPaused = !newEnabled;
+      updatePauseBtn(monitoringPaused);
+    });
     $('show-unnamed').addEventListener('change', e => {
       deviceList.setShowUnnamed(e.target.checked);
     });
