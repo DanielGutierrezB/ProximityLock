@@ -6,6 +6,7 @@ module.exports = {
     SAVE_PREFERENCES:  'prefs:save',
     LOCK_NOW:          'lock:now',
     ENABLE_TOGGLE:     'enable:toggle',
+    ENABLE_SET:        'enable:set',
     FACE_ENROLL:       'face:enroll',
     FACE_GET:          'face:get',
     FACE_STATUS:       'face:status',

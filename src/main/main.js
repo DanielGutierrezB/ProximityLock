@@ -115,6 +115,19 @@ function toggleEnabled() {
 
 ipcMain.handle(IPC.ENABLE_TOGGLE, toggleEnabled);
 
+ipcMain.handle(IPC.ENABLE_SET, (_e, enabled) => {
+  store.set('enabled', enabled);
+  tray.setEnabled(enabled);
+  if (!enabled) {
+    lockMgr.cancelLock();
+    tray.updateStatus(STATUS.DISABLED);
+    tray.setTrayTitle('');
+  } else {
+    tray.updateStatus(STATUS.CONNECTED);
+  }
+  return enabled;
+});
+
 // Face status from renderer → update tray icon + forward to popup
 ipcMain.on(IPC.FACE_STATUS, (_e, { matched, similarity, countdown }) => {
   if (!store.get('enabled')) return;
@@ -156,7 +169,9 @@ app.whenReady().then(() => {
     onToggle:    () => toggleEnabled(),
     onQuit:      () => app.quit(),
   });
-  tray.setEnabled(prefs.enabled);
+  // Always start with monitoring OFF; renderer handles autoMonitor
+  store.set('enabled', false);
+  tray.setEnabled(false);
 
   powerMonitor.on('lock-screen', () => {
     prefsWindow?.webContents.send(IPC.SCREEN_LOCKED);

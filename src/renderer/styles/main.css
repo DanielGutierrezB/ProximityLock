@@ -175,22 +175,21 @@ body {
 .threshold-control input[type="range"] { flex: 1; }
 .threshold-control .slider-val { min-width: 30px; text-align: right; font-size: 11px; }
 
-/* ── Monitoring card ── */
-.cam-monitor-card { padding: 10px 12px; }
-.monitor-row {
+/* ── Monitor info ── */
+.monitor-info {
+  text-align: center;
+  padding: 2px 0;
+}
+.monitor-status { font-size: 12px; font-weight: 500; }
+.monitor-status.matched { color: var(--green); }
+.monitor-status.warning { color: var(--red); }
+.monitor-auto-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 4px 0;
+  margin-top: 2px;
 }
-.monitor-row-sub {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-}
-.monitor-label { display: flex; align-items: center; gap: 8px; }
-.monitor-title { font-size: 13px; font-weight: 600; }
-.monitor-status { font-size: 11px; color: var(--text-secondary); }
-.monitor-status.active { color: var(--green); }
 .monitor-sub-label { font-size: 11px; color: var(--text-secondary); }
 
 /* ── Action buttons ── */

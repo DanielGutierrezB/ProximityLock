@@ -25,27 +25,35 @@
   function delayLabel(v) { return `${v} s`; }
   function intervalLabel(v) { return `${v} s`; }
 
+  async function store_set_enabled(val) {
+    await api.enableSet(val);
+  }
+
   function updateMonitoringUI() {
-    const toggle = $('monitoring-toggle');
+    const btn = $('monitoring-btn');
     const statusEl = $('monitor-status-text');
-    if (toggle) toggle.checked = monitoring;
-    if (statusEl) {
-      if (!monitoring) {
-        statusEl.textContent = 'Off';
-        statusEl.className = 'monitor-status';
-      } else if (lastFaceRecognized) {
-        statusEl.textContent = `Matched ${lastSimilarity}%`;
-        statusEl.className = 'monitor-status active';
-      } else if (noFaceAt) {
-        const elapsed = (Date.now() - noFaceAt) / 1000;
-        const lockDelaySec = parseFloat($('camera-lock-delay').value);
-        const remaining = Math.max(0, Math.ceil(lockDelaySec - elapsed));
-        statusEl.textContent = `Locking in ${remaining}s…`;
-        statusEl.className = 'monitor-status';
-        statusEl.style.color = 'var(--red)';
-      } else {
-        statusEl.textContent = 'Active';
-        statusEl.className = 'monitor-status active';
+    const infoEl = $('monitor-info');
+
+    if (!monitoring) {
+      if (btn) { btn.textContent = '▶ Start Monitoring'; btn.className = 'btn btn-success'; }
+      if (infoEl) infoEl.style.display = 'none';
+    } else {
+      if (btn) { btn.textContent = '⏹ Stop Monitoring'; btn.className = 'btn btn-secondary'; }
+      if (infoEl) infoEl.style.display = '';
+      if (statusEl) {
+        if (lastFaceRecognized) {
+          statusEl.textContent = `🟢 Matched ${lastSimilarity}%`;
+          statusEl.className = 'monitor-status matched';
+        } else if (noFaceAt) {
+          const elapsed = (Date.now() - noFaceAt) / 1000;
+          const lockDelaySec = parseFloat($('camera-lock-delay').value);
+          const remaining = Math.max(0, Math.ceil(lockDelaySec - elapsed));
+          statusEl.textContent = `🔴 Locking in ${remaining}s…`;
+          statusEl.className = 'monitor-status warning';
+        } else {
+          statusEl.textContent = 'Detecting…';
+          statusEl.className = 'monitor-status';
+        }
       }
     }
   }
@@ -341,7 +349,7 @@
     await startCamera();
     if (prefs.autoMonitor) {
       monitoring = true;
-      await api.enableToggle();
+      await store_set_enabled(true);
       updateMonitoringUI();
     }
   }
@@ -383,23 +391,22 @@
     await startCamera();
   });
 
-  // Monitoring toggle
-  $('monitoring-toggle').addEventListener('change', async () => {
-    if ($('monitoring-toggle').checked) {
+  // Monitoring button
+  $('monitoring-btn').addEventListener('click', async () => {
+    if (!monitoring) {
       if (!cameraActive) {
         const camId = $('camera-select').value;
         if (!camId) {
           alert('Please select a camera first');
-          $('monitoring-toggle').checked = false;
           return;
         }
         await startCamera();
       }
       monitoring = true;
-      await api.enableToggle();
+      store_set_enabled(true);
     } else {
       monitoring = false;
-      await api.enableToggle();
+      store_set_enabled(false);
     }
     updateMonitoringUI();
   });
