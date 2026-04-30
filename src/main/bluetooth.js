@@ -10,6 +10,9 @@ class BluetoothManager extends EventEmitter {
     this.scanning = false;
     this.monitoredDeviceId = null;
     this.bluetoothState = 'unknown';
+    this._lastMonitoredSeen = 0;     // timestamp of last monitored device sighting
+    this._signalLostTimer = null;    // fires when no signal for too long
+    this._signalLostTimeout = 8000;  // 8 seconds without signal = device gone
 
     noble.on('stateChange', this._onStateChange.bind(this));
     noble.on('discover', this._onDiscover.bind(this));
@@ -41,6 +44,8 @@ class BluetoothManager extends EventEmitter {
     }
     this.emit('deviceDiscovered', device);
     if (peripheral.id === this.monitoredDeviceId) {
+      this._lastMonitoredSeen = Date.now();
+      this._resetSignalLostTimer();
       this.emit('rssiUpdate', device);
     }
   }
@@ -66,6 +71,22 @@ class BluetoothManager extends EventEmitter {
 
   setMonitoredDevice(deviceId) {
     this.monitoredDeviceId = deviceId;
+    this._lastMonitoredSeen = 0;
+    this._resetSignalLostTimer();
+  }
+
+  _resetSignalLostTimer() {
+    if (this._signalLostTimer) clearTimeout(this._signalLostTimer);
+    if (!this.monitoredDeviceId) return;
+    this._signalLostTimer = setTimeout(() => {
+      console.log('[BLE] Signal LOST for', this.monitoredDeviceId, '- no signal for', this._signalLostTimeout / 1000, 's');
+      this.emit('signalLost', { id: this.monitoredDeviceId });
+    }, this._signalLostTimeout);
+  }
+
+  getLastSeenMs() {
+    if (!this._lastMonitoredSeen) return Infinity;
+    return Date.now() - this._lastMonitoredSeen;
   }
 
   getDeviceList() {

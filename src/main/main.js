@@ -58,7 +58,7 @@ function openPrefsWindow() {
 
 // ── RSSI Smoothing (Exponential Moving Average) ──────────────────────────────
 
-const EMA_ALPHA = 0.3;  // 0.0–1.0; lower = smoother but slower to react
+const EMA_ALPHA = 0.5;  // 0.0–1.0; higher = faster reaction, more noise
 let smoothedRssi = null;
 
 function smoothRssi(rawRssi) {
@@ -227,6 +227,12 @@ ipcMain.handle(IPC.REMOVE_DEVICE, (_e, { id }) => {
 // ── Bluetooth events ──────────────────────────────────────────────────────────
 
 bluetooth.on('rssiUpdate', (device) => handleRssiUpdate(device.rssi));
+
+// When no signal is received for 8s, treat as very far away
+bluetooth.on('signalLost', () => {
+  console.log('[LOCK] Signal lost — treating as far away');
+  handleRssiUpdate(-100);  // inject a very weak reading
+});
 
 bluetooth.on('deviceDiscovered', () => {
   // Only push full device list when scan modal is open
