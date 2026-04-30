@@ -211,12 +211,16 @@
     }
   }
 
+  let consecutiveMisses = 0;
+  const MISS_THRESHOLD = 3; // need 3 consecutive misses before starting lock countdown
+
   function onFaceStatus({ detected, recognized, similarity }) {
     const now = Date.now();
     const statusEl = $('detection-status-text');
     const timerEl  = $('detection-timer');
 
     if (recognized) {
+      consecutiveMisses = 0;
       noFaceAt = null;
       if (statusEl) {
         statusEl.textContent = `You ✅ ${similarity ? similarity + '% match' : ''}`;
@@ -226,8 +230,16 @@
       return;
     }
 
+    consecutiveMisses++;
+
+    // Only start countdown after multiple consecutive misses (prevents single-frame glitches)
+    if (consecutiveMisses < MISS_THRESHOLD) {
+      // Show warning but don't start lock timer yet
+      if (statusEl) { statusEl.textContent = detected ? 'Verifying…' : 'Checking…'; statusEl.className = 'detection-status-text'; }
+      return;
+    }
+
     if (detected && !recognized) {
-      // Face detected but not yours
       if (!noFaceAt) noFaceAt = now;
       if (statusEl) { statusEl.textContent = 'Unknown face ⚠️'; statusEl.className = 'detection-status-text no-face'; }
     } else {

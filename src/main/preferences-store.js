@@ -17,7 +17,7 @@ const schema = {
   savedDevices:       { type: 'array',   default: [] },
   lockMode:           { type: 'string',  default: 'bluetooth' },
   cameraCheckInterval:{ type: 'number',  default: 1 },
-  cameraLockDelay:    { type: 'number',  default: 5 },
+  cameraLockDelay:    { type: 'number',  default: 10 },
   showCameraPreview:  { type: 'boolean', default: true },
   faceDescriptor:     { type: ['array', 'null'],  default: null },
   facePhoto:          { type: ['string', 'null'], default: null },
