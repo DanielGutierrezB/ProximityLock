@@ -1,3 +1,5 @@
+'use strict';
+
 const Store = require('electron-store');
 const { DEFAULT_RSSI_THRESHOLD, DEFAULT_LOCK_DELAY_SEC } = require('../shared/constants');
 

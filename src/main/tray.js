@@ -12,7 +12,7 @@ const STATUS = {
 };
 
 function createCircleIcon(fill) {
-  // fill: 1.0 = solid, 0.5 = half, 0 = outline only
+  // fill: 1.0 = full solid circle, 0.5 = inner dot (edge indicator), 0 = ring only
   const size = 22;
   const cx = size / 2;
   const cy = size / 2;
@@ -29,16 +29,15 @@ function createCircleIcon(fill) {
       let alpha = 0;
       if (dist <= outerR) {
         if (fill >= 1.0) {
-          // solid circle
           alpha = 255;
         } else if (fill >= 0.5) {
-          // half filled: solid inner
-          alpha = dist <= innerR ? 255 : 255;
+          // inner dot only — visually distinct from the full circle
+          alpha = dist <= innerR ? 255 : 0;
         } else {
           // ring only
           alpha = dist >= outerR - 2 ? 255 : 0;
         }
-        // soft edge
+        // soft anti-aliased edge
         if (dist > outerR - 1) {
           alpha = Math.round(alpha * (outerR - dist));
         }
@@ -56,13 +55,14 @@ function createCircleIcon(fill) {
   return img;
 }
 
-const ICONS = {
-  [STATUS.CONNECTED]:    () => createCircleIcon(1.0),
-  [STATUS.EDGE]:         () => createCircleIcon(0.5),
-  [STATUS.DISCONNECTED]: () => createCircleIcon(0.0),
-  [STATUS.SCANNING]:     () => createCircleIcon(0.5),
-  [STATUS.DISABLED]:     () => createCircleIcon(0.0),
-  [STATUS.BT_OFF]:       () => createCircleIcon(0.0),
+// Pre-build icons once at startup — avoids recreating a Buffer + NativeImage on every RSSI tick
+const ICON_CACHE = {
+  [STATUS.CONNECTED]:    createCircleIcon(1.0),
+  [STATUS.EDGE]:         createCircleIcon(0.5),
+  [STATUS.DISCONNECTED]: createCircleIcon(0.0),
+  [STATUS.SCANNING]:     createCircleIcon(0.5),
+  [STATUS.DISABLED]:     createCircleIcon(0.0),
+  [STATUS.BT_OFF]:       createCircleIcon(0.0),
 };
 
 class TrayManager {
@@ -77,7 +77,7 @@ class TrayManager {
 
   init(callbacks) {
     this.callbacks = callbacks;
-    this.tray = new Tray(ICONS[STATUS.DISCONNECTED]());
+    this.tray = new Tray(ICON_CACHE[STATUS.SCANNING]); // show scanning state on startup
     this.tray.setToolTip('ProximityLock');
     this.tray.on('right-click', () => this.tray.popUpContextMenu());
     this._rebuildMenu();
@@ -87,7 +87,7 @@ class TrayManager {
     this.status = status;
     this.deviceName = deviceName;
     this.currentRssi = rssi;
-    this.tray?.setImage(ICONS[status]?.() ?? ICONS[STATUS.DISCONNECTED]());
+    this.tray?.setImage(ICON_CACHE[status] ?? ICON_CACHE[STATUS.DISCONNECTED]);
     this._rebuildMenu();
   }
 

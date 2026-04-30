@@ -31,7 +31,9 @@ class LockManager extends EventEmitter {
     const cgSession = '/System/Library/CoreServices/Menu\\ Extras/User.menu/Contents/Resources/CGSession -suspend';
     exec(cgSession, (err) => {
       if (err) {
-        exec('pmset displaysleepnow');
+        exec('pmset displaysleepnow', (err2) => {
+          if (err2) console.error('lock: pmset fallback failed:', err2.message);
+        });
       }
     });
     this.emit('locked');

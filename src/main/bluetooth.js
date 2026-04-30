@@ -42,15 +42,19 @@ class BluetoothManager extends EventEmitter {
   startScanning() {
     if (this.bluetoothState !== 'poweredOn') return;
     if (this.scanning) return;
-    noble.startScanning([], true);
-    this.scanning = true;
-    this.emit('scanStarted');
+    try {
+      noble.startScanning([], true);
+      this.scanning = true;
+      this.emit('scanStarted');
+    } catch (err) {
+      console.error('BLE startScanning error:', err.message);
+    }
   }
 
   stopScanning() {
     if (!this.scanning) return;
     noble.stopScanning();
-    this.scanning = false;
+    this.scanning = false; // set synchronously so callers can restart immediately
     this.emit('scanStopped');
   }
 

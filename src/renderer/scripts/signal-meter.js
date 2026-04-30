@@ -4,6 +4,10 @@
   class SignalMeter {
     constructor(containerId) {
       this.container = document.getElementById(containerId);
+      if (!this.container) {
+        console.warn('SignalMeter: container not found:', containerId);
+        return;
+      }
       this.rssi = null;
       this._render();
     }
@@ -31,6 +35,7 @@
     }
 
     update(rssi, status) {
+      if (!this.container) return;
       this.rssi = rssi;
       // Map RSSI -40 → 100%, -100 → 0%
       const clamped = Math.max(-100, Math.min(-40, rssi));
@@ -40,12 +45,13 @@
       this.fillEl.style.width = pct + '%';
 
       this.fillEl.className = 'rssi-bar-fill';
-      if (rssi >= -60)       this.fillEl.classList.add('');       // green (default)
+      if (rssi >= -60)       { /* default green via CSS */ }
       else if (rssi >= -75)  this.fillEl.classList.add('edge');
       else                   this.fillEl.classList.add('far');
     }
 
     reset() {
+      if (!this.container) return;
       this.rssi = null;
       this.dbmEl.textContent = '— dBm';
       this.fillEl.style.width = '0%';

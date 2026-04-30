@@ -4,6 +4,7 @@
   const api = window.proximityLock;
   let deviceList, signalMeter;
   let scanning = false;
+  let scanTimer = null;
   let prefs = {};
 
   function $(id) { return document.getElementById(id); }
@@ -12,7 +13,13 @@
   function delayLabel(v) { return `${v}s`; }
 
   async function init() {
-    prefs = await api.getPreferences();
+    try {
+      prefs = await api.getPreferences();
+    } catch (err) {
+      console.error('Failed to load preferences:', err);
+      prefs = {};
+      return;
+    }
 
     deviceList  = new DeviceList('device-list-el', 'scan-status');
     signalMeter = new SignalMeter('signal-meter-el');
@@ -42,6 +49,10 @@
 
     api.onDevicesUpdated(devices => deviceList.setDevices(devices));
     api.onRssiUpdate(({ rssi, status }) => signalMeter.update(rssi, status));
+
+    window.addEventListener('beforeunload', () => {
+      if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
+    });
   }
 
   function bindEvents() {
@@ -59,15 +70,18 @@
   }
 
   async function startScan() {
+    // Clear any pending auto-stop before starting a fresh scan
+    if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
     scanning = true;
     $('scan-btn').textContent = 'Stop';
     deviceList.setScanning(true);
     await api.startScan();
-    // auto-stop after 15s
-    setTimeout(stopScan, 15000);
+    // auto-stop after 15s; main process will resume monitoring scan automatically
+    scanTimer = setTimeout(() => { scanTimer = null; stopScan(); }, 15000);
   }
 
   async function stopScan() {
+    if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
     scanning = false;
     $('scan-btn').textContent = 'Scan';
     deviceList.setScanning(false);

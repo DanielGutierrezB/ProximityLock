@@ -1,6 +1,15 @@
 (function() {
   'use strict';
 
+  function escHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   class DeviceList {
     constructor(listId, statusId) {
       this.listEl   = document.getElementById(listId);
@@ -47,13 +56,13 @@
       const sorted = [...this.devices].sort((a, b) => b.rssi - a.rssi);
 
       this.listEl.innerHTML = sorted.map(d => `
-        <div class="device-item ${d.id === this.selectedId ? 'selected' : ''}" data-id="${d.id}" data-name="${d.name}">
+        <div class="device-item ${d.id === this.selectedId ? 'selected' : ''}" data-id="${escHtml(d.id)}" data-name="${escHtml(d.name)}">
           <span class="device-icon">${this._deviceIcon(d.name)}</span>
           <div class="device-info">
-            <div class="device-name">${d.name}</div>
-            <div class="device-addr">${d.address || d.id}</div>
+            <div class="device-name">${escHtml(d.name)}</div>
+            <div class="device-addr">${escHtml(d.address || d.id)}</div>
           </div>
-          <span class="device-rssi">${d.rssi} dBm</span>
+          <span class="device-rssi">${escHtml(String(d.rssi))} dBm</span>
         </div>
       `).join('');
 

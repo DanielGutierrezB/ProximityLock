@@ -80,7 +80,17 @@ function handleRssiUpdate(rssi) {
 ipcMain.handle(IPC.GET_PREFERENCES, () => store.store);
 
 ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
-  for (const [k, v] of Object.entries(prefs)) store.set(k, v);
+  // Whitelist keys to prevent arbitrary writes from renderer
+  const ALLOWED = ['rssiThreshold', 'lockDelaySec', 'startOnLogin', 'menuBarOnly', 'showInDock', 'startMinimized', 'notifications'];
+  for (const key of ALLOWED) {
+    if (key in prefs) store.set(key, prefs[key]);
+  }
+  // Clamp numeric values to valid ranges
+  const threshold = store.get('rssiThreshold');
+  if (threshold < -100 || threshold > -40) store.set('rssiThreshold', -70);
+  const delay = store.get('lockDelaySec');
+  if (delay < 1 || delay > 300) store.set('lockDelaySec', 10);
+
   await setAutoLaunch(prefs.startOnLogin);
   applyDockMode(prefs);
   return true;
@@ -96,10 +106,16 @@ ipcMain.handle(IPC.START_SCAN, () => {
 
 ipcMain.handle(IPC.STOP_SCAN, () => {
   bluetooth.stopScanning();
+  // Resume monitoring scan if a device is actively tracked
+  const { enabled, selectedDeviceId } = store.store;
+  if (enabled && selectedDeviceId) {
+    bluetooth.startScanning();
+  }
   return true;
 });
 
 ipcMain.handle(IPC.SELECT_DEVICE, (_e, { id, name }) => {
+  belowThresholdAt = null; // reset grace period so new device gets a clean slate
   store.set('selectedDeviceId', id);
   store.set('selectedDeviceName', name);
   bluetooth.setMonitoredDevice(id);
@@ -152,9 +168,10 @@ lockMgr.on('locked', () => {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
-app.whenReady().then(() => {
-  app.on('window-all-closed', (e) => e.preventDefault());
+// Prevent quitting when all windows close (menu bar app stays alive)
+app.on('window-all-closed', (e) => e.preventDefault());
 
+app.whenReady().then(() => {
   const prefs = store.store;
   applyDockMode(prefs);
 
