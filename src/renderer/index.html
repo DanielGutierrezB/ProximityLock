@@ -110,6 +110,29 @@
         </div>
       </div>
 
+      <!-- Camera Mode: Face Enrollment -->
+      <div class="settings-section camera-only" data-section="face-enroll" style="display:none">
+        <button class="section-header">
+          <span>Your Face</span>
+          <span class="collapse-arrow">▼</span>
+        </button>
+        <div class="section-body">
+          <div class="card camera-card">
+            <div id="enroll-container">
+              <div id="enrolled-photo-container" style="display:none">
+                <img id="enrolled-photo" width="160" height="120" style="border-radius:8px;object-fit:cover">
+                <div class="enroll-name" id="enrolled-name">✅ Face enrolled</div>
+              </div>
+              <div id="enroll-prompt">
+                <p style="margin:0 0 8px;color:var(--text-secondary);font-size:12px">Take a photo so the app recognizes <strong>your face</strong> specifically.</p>
+                <button class="btn btn-primary" id="enroll-btn">📸 Take Photo</button>
+              </div>
+              <button class="btn btn-danger" id="re-enroll-btn" style="display:none;margin-top:8px;font-size:11px">🔄 Retake Photo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Camera Mode: Preview + Detection Status -->
       <div class="settings-section camera-only" data-section="camera-preview" style="display:none">
         <button class="section-header">

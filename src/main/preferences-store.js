@@ -19,6 +19,8 @@ const schema = {
   cameraCheckInterval:{ type: 'number',  default: 1 },
   cameraLockDelay:    { type: 'number',  default: 5 },
   showCameraPreview:  { type: 'boolean', default: true },
+  faceDescriptor:     { type: ['array', 'null'],  default: null },
+  facePhoto:          { type: ['string', 'null'], default: null },
 };
 
 module.exports = new Store({ schema });

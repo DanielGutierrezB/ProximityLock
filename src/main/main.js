@@ -185,6 +185,21 @@ ipcMain.handle(IPC.SELECT_DEVICE, (_e, { id, name }) => {
   return true;
 });
 
+// Face enrollment: store descriptor + photo
+ipcMain.handle(IPC.FACE_ENROLL, (_e, { descriptor, photo }) => {
+  store.set('faceDescriptor', descriptor);
+  store.set('facePhoto', photo);
+  console.log('[FACE] Enrolled face, descriptor length:', descriptor.length);
+  return true;
+});
+
+ipcMain.handle(IPC.FACE_GET, () => {
+  return {
+    descriptor: store.get('faceDescriptor', null),
+    photo: store.get('facePhoto', null),
+  };
+});
+
 ipcMain.handle(IPC.LOCK_NOW, () => {
   lockMgr.lockNow();
   return true;

@@ -199,21 +199,29 @@
     $('mode-camera').classList.toggle('active', mode === 'camera');
   }
 
-  function onFaceStatus({ detected }) {
+  function onFaceStatus({ detected, recognized, similarity }) {
     const now = Date.now();
     const statusEl = $('detection-status-text');
     const timerEl  = $('detection-timer');
 
-    if (detected) {
+    if (recognized) {
       noFaceAt = null;
-      if (statusEl) { statusEl.textContent = 'Face Detected ✅'; statusEl.className = 'detection-status-text face-detected'; }
+      if (statusEl) {
+        statusEl.textContent = `You ✅ ${similarity ? similarity + '% match' : ''}`;
+        statusEl.className = 'detection-status-text face-detected';
+      }
       if (timerEl)  timerEl.textContent = '';
       return;
     }
 
-    if (!noFaceAt) noFaceAt = now;
-
-    if (statusEl) { statusEl.textContent = 'No Face Detected ⚠️'; statusEl.className = 'detection-status-text no-face'; }
+    if (detected && !recognized) {
+      // Face detected but not yours
+      if (!noFaceAt) noFaceAt = now;
+      if (statusEl) { statusEl.textContent = 'Unknown face ⚠️'; statusEl.className = 'detection-status-text no-face'; }
+    } else {
+      if (!noFaceAt) noFaceAt = now;
+      if (statusEl) { statusEl.textContent = 'No face detected ⚠️'; statusEl.className = 'detection-status-text no-face'; }
+    }
 
     const elapsed           = (now - noFaceAt) / 1000;
     const lockDelaySec      = parseFloat($('camera-lock-delay').value);
@@ -240,6 +248,38 @@
     if (cameraTimerUpdateId) { clearInterval(cameraTimerUpdateId); cameraTimerUpdateId = null; }
   }
 
+  function showEnrolledFace(photoDataUrl) {
+    const container = $('enrolled-photo-container');
+    const prompt = $('enroll-prompt');
+    const reBtn = $('re-enroll-btn');
+    const photo = $('enrolled-photo');
+    if (photoDataUrl && container) {
+      photo.src = photoDataUrl;
+      container.style.display = '';
+      if (prompt) prompt.style.display = 'none';
+      if (reBtn) reBtn.style.display = '';
+    }
+  }
+
+  async function enrollFace() {
+    if (!faceDetector || !faceDetector.initialized) {
+      alert('Camera not ready yet');
+      return;
+    }
+    const btn = $('enroll-btn');
+    if (btn) btn.textContent = 'Capturing...';
+    try {
+      const result = await faceDetector.enroll();
+      await api.faceEnroll({ descriptor: result.descriptor, photo: result.photo });
+      showEnrolledFace(result.photo);
+      console.log('[Enroll] Success, confidence:', result.confidence);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      if (btn) btn.textContent = '📸 Take Photo';
+    }
+  }
+
   function updateCameraPreviewVisibility() {
     const video = $('camera-preview-video');
     if (!video) return;
@@ -260,6 +300,13 @@
         faceDetector = new FaceDetector();
         if (statusEl) statusEl.textContent = 'Loading face detection models…';
         await faceDetector.init($('camera-preview-video'));
+      }
+
+      // Load saved face descriptor if available
+      const faceData = await api.faceGet();
+      if (faceData && faceData.descriptor) {
+        faceDetector.loadDescriptor(faceData.descriptor);
+        showEnrolledFace(faceData.photo);
       }
 
       faceDetector.onFaceStatus = onFaceStatus;
@@ -457,6 +504,19 @@
     $('scan-overlay').addEventListener('click', e => {
       if (e.target === $('scan-overlay')) closeScanPanel();
     });
+
+    // Face enrollment buttons
+    if ($('enroll-btn')) {
+      $('enroll-btn').addEventListener('click', enrollFace);
+    }
+    if ($('re-enroll-btn')) {
+      $('re-enroll-btn').addEventListener('click', async () => {
+        $('enrolled-photo-container').style.display = 'none';
+        $('enroll-prompt').style.display = '';
+        $('re-enroll-btn').style.display = 'none';
+        await enrollFace();
+      });
+    }
   }
 
   async function pollDevices() {

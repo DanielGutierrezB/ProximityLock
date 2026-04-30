@@ -12,6 +12,8 @@ const IPC = {
   LOCK_NOW: 'lock:now',
   ENABLE_TOGGLE: 'enable:toggle',
   SAVE_DEVICE: 'device:save',
+  FACE_ENROLL: 'face:enroll',
+  FACE_GET: 'face:get',
   REMOVE_DEVICE: 'device:remove',
 };
 
