@@ -54,7 +54,7 @@ function openPrefsWindow() {
 ipcMain.handle(IPC.GET_PREFERENCES, () => store.store);
 
 ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
-  const ALLOWED = ['startOnLogin', 'menuBarOnly', 'showInDock', 'startMinimized', 'notifications', 'cameraCheckInterval', 'cameraLockDelay', 'showCameraPreview', 'selectedCameraId', 'matchThreshold'];
+  const ALLOWED = ['startOnLogin', 'menuBarOnly', 'showInDock', 'startMinimized', 'notifications', 'cameraCheckInterval', 'cameraLockDelay', 'showCameraPreview', 'selectedCameraId', 'matchThreshold', 'autoMonitor'];
   for (const key of ALLOWED) {
     if (key in prefs) store.set(key, prefs[key]);
   }

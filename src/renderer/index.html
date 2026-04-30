@@ -82,9 +82,29 @@
         </div>
       </div>
 
+      <!-- Monitoring -->
+      <div class="card cam-monitor-card">
+        <div class="monitor-row">
+          <div class="monitor-label">
+            <span class="monitor-title">🔒 Monitoring</span>
+            <span class="monitor-status" id="monitor-status-text">Off</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="monitoring-toggle">
+            <span class="toggle-knob"></span>
+          </label>
+        </div>
+        <div class="monitor-row monitor-row-sub">
+          <span class="monitor-sub-label">Auto-start on launch</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="auto-monitor-toggle">
+            <span class="toggle-knob"></span>
+          </label>
+        </div>
+      </div>
+
       <!-- Actions -->
       <div class="cam-actions">
-        <button class="btn btn-success" id="monitoring-toggle-btn">▶ Start Monitoring</button>
         <button class="btn btn-danger" id="lock-now-btn">🔒 Lock Now</button>
       </div>
 

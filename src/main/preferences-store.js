@@ -4,6 +4,7 @@ const Store = require('electron-store');
 
 const schema = {
   enabled:            { type: 'boolean', default: false },
+  autoMonitor:        { type: 'boolean', default: false },
   startOnLogin:       { type: 'boolean', default: false },
   menuBarOnly:        { type: 'boolean', default: true },
   showInDock:         { type: 'boolean', default: false },

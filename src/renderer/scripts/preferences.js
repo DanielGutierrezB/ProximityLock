@@ -7,7 +7,7 @@
 
   let faceDetector = null;
   let cameraActive = false;
-  let monitoring = prefs.enabled || false;
+  let monitoring = false; // always start off, autoMonitor handles launch
   let noFaceAt = null;
   let consecutiveMisses = 0;
   const MISS_THRESHOLD = 3;
@@ -25,31 +25,28 @@
   function delayLabel(v) { return `${v} s`; }
   function intervalLabel(v) { return `${v} s`; }
 
-  function updateMonitoringBtn() {
-    const btn = $('monitoring-toggle-btn');
-    if (!btn) return;
-    if (!monitoring) {
-      btn.textContent = '▶ Start Monitoring';
-      btn.className = 'btn btn-sm btn-success';
-      return;
-    }
-    if (!cameraActive) {
-      btn.textContent = '⏹ Stop Monitoring';
-      btn.className = 'btn btn-sm btn-secondary';
-      return;
-    }
-    if (lastFaceRecognized) {
-      btn.textContent = `🟢 Matched ${lastSimilarity}%`;
-      btn.className = 'btn btn-sm btn-success';
-    } else if (noFaceAt) {
-      const elapsed = (Date.now() - noFaceAt) / 1000;
-      const lockDelaySec = parseFloat($('camera-lock-delay').value);
-      const remaining = Math.max(0, Math.ceil(lockDelaySec - elapsed));
-      btn.textContent = `🔴 Locking in ${remaining}s…`;
-      btn.className = 'btn btn-sm btn-danger';
-    } else {
-      btn.textContent = '⏹ Stop Monitoring';
-      btn.className = 'btn btn-sm btn-secondary';
+  function updateMonitoringUI() {
+    const toggle = $('monitoring-toggle');
+    const statusEl = $('monitor-status-text');
+    if (toggle) toggle.checked = monitoring;
+    if (statusEl) {
+      if (!monitoring) {
+        statusEl.textContent = 'Off';
+        statusEl.className = 'monitor-status';
+      } else if (lastFaceRecognized) {
+        statusEl.textContent = `Matched ${lastSimilarity}%`;
+        statusEl.className = 'monitor-status active';
+      } else if (noFaceAt) {
+        const elapsed = (Date.now() - noFaceAt) / 1000;
+        const lockDelaySec = parseFloat($('camera-lock-delay').value);
+        const remaining = Math.max(0, Math.ceil(lockDelaySec - elapsed));
+        statusEl.textContent = `Locking in ${remaining}s…`;
+        statusEl.className = 'monitor-status';
+        statusEl.style.color = 'var(--red)';
+      } else {
+        statusEl.textContent = 'Active';
+        statusEl.className = 'monitor-status active';
+      }
     }
   }
 
@@ -88,7 +85,7 @@
       }
       if (timerEl) timerEl.textContent = '';
       api.faceStatus({ matched: true, similarity: similarity || 0 });
-      updateMonitoringBtn();
+      updateMonitoringUI();
       return;
     }
 
@@ -118,7 +115,7 @@
     }
     if (timerEl) timerEl.textContent = '';
 
-    updateMonitoringBtn();
+    updateMonitoringUI();
 
     const elapsed = (now - noFaceAt) / 1000;
     const lockDelaySec = parseFloat($('camera-lock-delay').value);
@@ -141,7 +138,7 @@
           statusEl.textContent = `${noFaceLabel} ${elapsed}s`;
         }
       }
-      if (monitoring) updateMonitoringBtn();
+      if (monitoring) updateMonitoringUI();
     }, 500);
   }
 
@@ -233,7 +230,7 @@
     if (statusEl) { statusEl.textContent = 'Idle'; statusEl.className = 'detection-status-text'; }
     const timerEl = $('detection-timer');
     if (timerEl) timerEl.textContent = '';
-    updateMonitoringBtn();
+    updateMonitoringUI();
   }
 
   // ── Enrollment ────────────────────────────────────────────────────────────
@@ -301,7 +298,7 @@
       lastSimilarity = 0;
       stopTimerUpdate();
       updatePreviewUI();
-      updateMonitoringBtn();
+      updateMonitoringUI();
       const statusEl = $('detection-status-text');
       if (statusEl) { statusEl.textContent = 'Screen locked'; statusEl.className = 'detection-status-text'; }
     }
@@ -327,7 +324,7 @@
   $('menu-bar-only').checked = prefs.menuBarOnly !== false;
   $('notifications').checked = prefs.notifications !== false;
 
-  updateMonitoringBtn();
+  updateMonitoringUI();
   updatePreviewUI();
 
   const faceData = await api.faceGet();
@@ -337,10 +334,16 @@
 
   await populateCameraList();
 
+  // Auto-start camera if saved, and monitoring if autoMonitor is enabled
   const savedCamId = $('camera-select').value;
   if (savedCamId) {
     console.log('[UI] Saved camera found, auto-starting:', savedCamId);
     await startCamera();
+    if (prefs.autoMonitor) {
+      monitoring = true;
+      await api.enableToggle();
+      updateMonitoringUI();
+    }
   }
 
   // ── Event listeners ───────────────────────────────────────────────────────
@@ -380,12 +383,14 @@
     await startCamera();
   });
 
-  $('monitoring-toggle-btn').addEventListener('click', async () => {
-    if (!monitoring) {
+  // Monitoring toggle
+  $('monitoring-toggle').addEventListener('change', async () => {
+    if ($('monitoring-toggle').checked) {
       if (!cameraActive) {
         const camId = $('camera-select').value;
         if (!camId) {
           alert('Please select a camera first');
+          $('monitoring-toggle').checked = false;
           return;
         }
         await startCamera();
@@ -396,7 +401,13 @@
       monitoring = false;
       await api.enableToggle();
     }
-    updateMonitoringBtn();
+    updateMonitoringUI();
+  });
+
+  // Auto-monitor toggle
+  $('auto-monitor-toggle').checked = prefs.autoMonitor || false;
+  $('auto-monitor-toggle').addEventListener('change', () => {
+    api.savePreferences({ autoMonitor: $('auto-monitor-toggle').checked });
   });
 
   $('preview-toggle-btn').addEventListener('click', () => {

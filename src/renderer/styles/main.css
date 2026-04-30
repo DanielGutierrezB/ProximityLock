@@ -63,7 +63,7 @@ body {
 
 /* LEFT: Preview column */
 .col-preview {
-  flex: 1;
+  flex: 0 0 55%;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -127,8 +127,8 @@ body {
 
 /* RIGHT: Controls column */
 .col-controls {
-  width: 240px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 260px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -174,6 +174,24 @@ body {
 }
 .threshold-control input[type="range"] { flex: 1; }
 .threshold-control .slider-val { min-width: 30px; text-align: right; font-size: 11px; }
+
+/* ── Monitoring card ── */
+.cam-monitor-card { padding: 10px 12px; }
+.monitor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.monitor-row-sub {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.monitor-label { display: flex; align-items: center; gap: 8px; }
+.monitor-title { font-size: 13px; font-weight: 600; }
+.monitor-status { font-size: 11px; color: var(--text-secondary); }
+.monitor-status.active { color: var(--green); }
+.monitor-sub-label { font-size: 11px; color: var(--text-secondary); }
 
 /* ── Action buttons ── */
 .cam-actions {
