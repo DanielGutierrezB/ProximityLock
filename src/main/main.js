@@ -142,7 +142,7 @@ ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
   const threshold = store.get('rssiThreshold');
   if (threshold < -100 || threshold > -40) store.set('rssiThreshold', -70);
   const delay = store.get('lockDelaySec');
-  if (delay < 1 || delay > 300) store.set('lockDelaySec', 10);
+  if (delay < 1 || delay > 15) store.set('lockDelaySec', 3);
 
   await setAutoLaunch(prefs.startOnLogin);
   applyDockMode(prefs);
