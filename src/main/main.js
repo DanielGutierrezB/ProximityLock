@@ -60,7 +60,7 @@ function openPrefsWindow() {
 
 function handleRssiUpdate(rssi) {
   const { enabled, selectedDeviceId, rssiThreshold, lockDelaySec } = store.store;
-  if (!enabled || !selectedDeviceId) return;
+  if (!selectedDeviceId) return;
 
   const deviceName = store.get('selectedDeviceName');
   let newStatus;
@@ -73,6 +73,13 @@ function handleRssiUpdate(rssi) {
     newStatus = STATUS.DISCONNECTED;
   }
 
+  // Always update UI with signal data
+  tray.updateStatus(newStatus, deviceName, rssi);
+  prefsWindow?.webContents.send(IPC.DEVICE_RSSI_UPDATE, { rssi, status: newStatus });
+
+  // Only trigger lock/unlock logic when enabled
+  if (!enabled) return;
+
   if (newStatus === STATUS.DISCONNECTED) {
     if (!belowThresholdAt) belowThresholdAt = Date.now();
     const elapsed = (Date.now() - belowThresholdAt) / 1000;
@@ -83,9 +90,6 @@ function handleRssiUpdate(rssi) {
     belowThresholdAt = null;
     lockMgr.cancelLock();
   }
-
-  tray.updateStatus(newStatus, deviceName, rssi);
-  prefsWindow?.webContents.send(IPC.DEVICE_RSSI_UPDATE, { rssi, status: newStatus });
 }
 
 // ── IPC handlers ──────────────────────────────────────────────────────────────

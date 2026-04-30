@@ -231,6 +231,35 @@ body {
   border: 1.5px solid var(--toggle-off);
   flex-shrink: 0;
 }
+.saved-searching-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.saved-device-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.device-status-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.device-status-label.connected { color: var(--green); }
+.device-status-label.searching { color: var(--orange); }
+.device-status-label.inactive { color: var(--text-tertiary); }
 
 .saved-device-name {
   flex: 1;

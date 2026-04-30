@@ -84,10 +84,22 @@
       const isActive = d.id === activeDeviceId;
       const live = latestDeviceMap[d.id];
       const rssi = live ? live.rssi : null;
+      const isConnected = rssi !== null && rssi > -100;
+      let statusLabel;
+      if (!isActive) {
+        statusLabel = '<span class="device-status-label inactive">Inactive</span>';
+      } else if (isConnected) {
+        statusLabel = '<span class="device-status-label connected">Connected</span>';
+      } else {
+        statusLabel = '<span class="device-status-label searching">Searching…</span>';
+      }
       return `<div class="saved-device-item ${isActive ? 'active' : ''}" data-id="${escHtml(d.id)}" data-name="${escHtml(d.name)}">` +
-        `<div class="${isActive ? 'saved-active-dot' : 'saved-inactive-dot'}"></div>` +
+        `<div class="${isActive && isConnected ? 'saved-active-dot' : isActive ? 'saved-searching-dot' : 'saved-inactive-dot'}"></div>` +
         `<span class="device-icon">${deviceIcon(d.name)}</span>` +
+        `<div class="saved-device-info">` +
         `<span class="saved-device-name">${escHtml(d.name || 'Unknown')}</span>` +
+        statusLabel +
+        `</div>` +
         (rssi !== null ? signalBarsHtml(rssi) : '<div class="signal-bars" style="opacity:0.3">' +
           '<div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div><div class="bar b4"></div></div>') +
         `<button class="saved-device-remove" data-id="${escHtml(d.id)}" title="Remove">✕</button>` +
