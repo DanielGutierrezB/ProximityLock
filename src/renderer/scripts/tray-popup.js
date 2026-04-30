@@ -94,8 +94,19 @@
   $('popup-quit-btn').addEventListener('click', () => api.quit());
 
   $('retake-btn').addEventListener('click', () => {
-    // Open main window for enrollment (can't do camera in popup)
     api.openPrefs();
+  });
+
+  // Sync prefs from main window
+  api.onPrefsChanged((changed) => {
+    if ('matchThreshold' in changed) {
+      matchEl.value = changed.matchThreshold;
+      matchValEl.textContent = changed.matchThreshold + '%';
+    }
+    if ('cameraLockDelay' in changed) {
+      delayEl.value = changed.cameraLockDelay;
+      delayValEl.textContent = changed.cameraLockDelay + 's';
+    }
   });
 
 })();

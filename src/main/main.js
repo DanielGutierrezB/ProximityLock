@@ -60,6 +60,13 @@ ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
   }
   await setAutoLaunch(prefs.startOnLogin);
   applyDockMode(prefs);
+
+  // Sync preferences to all windows
+  const changed = {};
+  for (const key of ALLOWED) { if (key in prefs) changed[key] = prefs[key]; }
+  prefsWindow?.webContents.send('prefs:changed', changed);
+  tray.sendToPopup('prefs:changed', changed);
+
   return true;
 });
 
@@ -109,10 +116,19 @@ function toggleEnabled() {
 ipcMain.handle(IPC.ENABLE_TOGGLE, toggleEnabled);
 
 // Face status from renderer → update tray icon + forward to popup
-ipcMain.on(IPC.FACE_STATUS, (_e, { matched, similarity }) => {
+ipcMain.on(IPC.FACE_STATUS, (_e, { matched, similarity, countdown }) => {
   if (!store.get('enabled')) return;
   tray.updateStatus(matched ? STATUS.CONNECTED : STATUS.DISCONNECTED);
   tray.sendFaceStatus({ matched, similarity: similarity || 0 });
+
+  // Show match % or countdown next to tray icon
+  if (matched) {
+    tray.setTrayTitle(`${similarity || 0}%`);
+  } else if (countdown != null && countdown > 0) {
+    tray.setTrayTitle(`${countdown}s`);
+  } else {
+    tray.setTrayTitle('');
+  }
 });
 
 // ── Lock events ───────────────────────────────────────────────────────────────

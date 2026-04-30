@@ -42,4 +42,5 @@ contextBridge.exposeInMainWorld('proximityLock', {
   onScreenLocked:     (cb)     => ipcRenderer.on(IPC.SCREEN_LOCKED, () => cb()),
   onScreenUnlocked:   (cb)     => ipcRenderer.on(IPC.SCREEN_UNLOCKED, () => cb()),
   onFaceStatusUpdate: (cb)     => ipcRenderer.on(IPC.POPUP_FACE_STATUS, (_, data) => cb(data)),
+  onPrefsChanged:      (cb)     => ipcRenderer.on('prefs:changed', (_, data) => cb(data)),
 });

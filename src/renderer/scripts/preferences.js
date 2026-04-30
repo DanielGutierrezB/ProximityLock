@@ -93,7 +93,9 @@
     }
 
     if (consecutiveMisses >= MISS_THRESHOLD) {
-      api.faceStatus({ matched: false, similarity: 0 });
+      const lockDelay = parseFloat($('camera-lock-delay').value);
+      const cd = noFaceAt ? Math.max(0, Math.ceil(lockDelay - (now - noFaceAt) / 1000)) : lockDelay;
+      api.faceStatus({ matched: false, similarity: 0, countdown: cd });
     }
 
     consecutiveMisses++;
@@ -271,6 +273,20 @@
     const overlay = $('settings-overlay');
     overlay.classList.toggle('hidden');
   }
+
+  // ── Sync prefs from other windows ──────────────────────────────────────────
+
+  api.onPrefsChanged((changed) => {
+    if ('matchThreshold' in changed) {
+      $('match-threshold').value = changed.matchThreshold;
+      $('match-threshold-val').textContent = changed.matchThreshold + '%';
+      if (faceDetector) faceDetector.SIMILARITY_THRESHOLD = changed.matchThreshold / 100;
+    }
+    if ('cameraLockDelay' in changed) {
+      $('camera-lock-delay').value = changed.cameraLockDelay;
+      $('camera-lock-delay-val').textContent = delayLabel(changed.cameraLockDelay);
+    }
+  });
 
   // ── Screen lock/unlock ────────────────────────────────────────────────────
 

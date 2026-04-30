@@ -70,7 +70,7 @@ body {
 }
 
 /* ── Camera preview ── */
-.cam-preview-card { padding: 0; overflow: hidden; }
+.cam-preview-card { padding: 0; }
 .cam-preview-wrap {
   position: relative;
   width: 100%;

@@ -74,11 +74,23 @@ class TrayManager {
 
   setEnabled(enabled) {
     this.enabled = enabled;
+    if (!enabled) this.tray?.setTitle('');
+  }
+
+  // Update the text shown next to the tray icon in the menu bar
+  setTrayTitle(text) {
+    this.tray?.setTitle(text, { fontType: 'monospacedDigit' });
   }
 
   sendFaceStatus(data) {
     if (this.popupWindow && !this.popupWindow.isDestroyed() && this.popupWindow.isVisible()) {
       this.popupWindow.webContents.send('popup:face-status', data);
+    }
+  }
+
+  sendToPopup(channel, data) {
+    if (this.popupWindow && !this.popupWindow.isDestroyed()) {
+      this.popupWindow.webContents.send(channel, data);
     }
   }
 
