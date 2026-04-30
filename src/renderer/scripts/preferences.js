@@ -186,14 +186,8 @@
       await activateDevice(id, name);
       // Reflect saved state in scan list
       deviceList.setSavedIds(new Set(savedDevices.map(d => d.id)));
-      // Auto-collapse scan section after first device added
-      if (savedDevices.length > 0) {
-        const section = document.querySelector('.settings-section[data-section="scan-add"]');
-        if (section && !section.classList.contains('collapsed')) {
-          section.classList.add('collapsed');
-          localStorage.setItem('section-collapsed-scan-add', 'true');
-        }
-      }
+      // Close the scan panel after adding
+      closeScanPanel();
     };
 
     $('rssi-threshold').value  = prefs.rssiThreshold;
@@ -230,12 +224,22 @@
 
     bindEvents();
     initCollapsible();
-    await startScan();
+    // Don't auto-scan — scan only when user opens the Add Device panel
 
     window.addEventListener('beforeunload', () => {
       if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     });
+  }
+
+  function openScanPanel() {
+    $('scan-overlay').classList.remove('hidden');
+    startScan();
+  }
+
+  function closeScanPanel() {
+    $('scan-overlay').classList.add('hidden');
+    stopScan();
   }
 
   function bindEvents() {
@@ -254,6 +258,13 @@
     $('save-btn').addEventListener('click', save);
     $('show-unnamed').addEventListener('change', e => {
       deviceList.setShowUnnamed(e.target.checked);
+    });
+
+    // Scan overlay open/close
+    $('add-device-btn').addEventListener('click', openScanPanel);
+    $('scan-close-btn').addEventListener('click', closeScanPanel);
+    $('scan-overlay').addEventListener('click', e => {
+      if (e.target === $('scan-overlay')) closeScanPanel();
     });
   }
 

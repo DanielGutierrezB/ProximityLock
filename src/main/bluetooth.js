@@ -20,9 +20,8 @@ class BluetoothManager extends EventEmitter {
     console.log('[BLE] State changed:', state);
     this.bluetoothState = state;
     this.emit('stateChange', state);
-    if (state === 'poweredOn') {
-      this.startScanning();
-    }
+    // Don't auto-scan on startup — wait for user to open scan panel
+    // if (state === 'poweredOn') this.startScanning();
   }
 
   _onDiscover(peripheral) {

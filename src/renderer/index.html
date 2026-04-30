@@ -29,22 +29,25 @@
         </div>
       </div>
 
-      <div class="settings-section" data-section="scan-add">
-        <button class="section-header">
-          <span>Scan &amp; Add</span>
-          <span class="collapse-arrow">▼</span>
-        </button>
-        <div class="section-body">
-          <div class="card">
-            <div id="device-list-el"></div>
-            <div class="device-actions">
-              <span class="status-text" id="scan-status">Not scanning</span>
-              <label class="unnamed-toggle">
-                <input type="checkbox" id="show-unnamed">
-                <span>Unnamed</span>
-              </label>
-              <button class="btn btn-secondary" id="scan-btn">Scan</button>
-            </div>
+      <div class="add-device-row">
+        <button class="btn btn-secondary btn-add-device" id="add-device-btn">+ Add Device</button>
+      </div>
+
+      <!-- Scan overlay/modal -->
+      <div class="scan-overlay hidden" id="scan-overlay">
+        <div class="scan-panel">
+          <div class="scan-panel-header">
+            <span class="scan-panel-title">Add Device</span>
+            <button class="scan-panel-close" id="scan-close-btn">✕</button>
+          </div>
+          <div id="device-list-el"></div>
+          <div class="device-actions">
+            <span class="status-text" id="scan-status">Scanning…</span>
+            <label class="unnamed-toggle">
+              <input type="checkbox" id="show-unnamed">
+              <span>Unnamed</span>
+            </label>
+            <button class="btn btn-secondary" id="scan-btn">Stop</button>
           </div>
         </div>
       </div>

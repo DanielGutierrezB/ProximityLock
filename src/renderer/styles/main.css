@@ -584,3 +584,104 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   color: var(--text-tertiary);
   font-style: italic;
 }
+
+/* ── Add Device button ── */
+.add-device-row {
+  padding: 8px 0;
+}
+.btn-add-device {
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 13px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-add-device:hover {
+  background: var(--bg-card);
+}
+
+/* ── Scan overlay ── */
+.scan-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.scan-overlay.hidden {
+  display: none;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.scan-panel {
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+  width: 420px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.scan-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.scan-panel-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.scan-panel-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+.scan-panel-close:hover {
+  background: var(--bg-card-hover);
+}
+.scan-panel #device-list-el {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.scan-panel .device-actions {
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-add-device {
+    border-color: rgba(255,255,255,0.15);
+    color: var(--accent);
+  }
+  .btn-add-device:hover {
+    background: var(--bg-card);
+  }
+  .scan-panel {
+    background: var(--bg-body);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .scan-overlay {
+    background: rgba(0,0,0,0.55);
+  }
+}

@@ -49,7 +49,6 @@ function openPrefsWindow() {
   });
   prefsWindow.once('ready-to-show', () => {
     prefsWindow.show();
-    prefsWindow.webContents.openDevTools({ mode: 'detach' });
   });
   prefsWindow.on('closed', () => { prefsWindow = null; });
 }
