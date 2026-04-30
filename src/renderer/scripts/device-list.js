@@ -20,12 +20,22 @@
       this.onSelect    = null;
       this._scanning   = false;
       this.showUnnamed = false;
+      this._renderTimer = null;
+      this._deviceOrder = [];  // stable insertion order by id
     }
 
     setDevices(devices) {
       this.devices = devices;
       this._updateStatus();
-      this._render();
+      this._throttledRender();
+    }
+
+    _throttledRender() {
+      if (this._renderTimer) return; // already scheduled
+      this._renderTimer = setTimeout(() => {
+        this._renderTimer = null;
+        this._render();
+      }, 3000);
     }
 
     setSelectedId(id) {
@@ -41,13 +51,14 @@
     setScanning(scanning) {
       this._scanning = scanning;
       this._updateStatus();
-      this._render();
+      if (!scanning) this._render(); // render immediately when scan stops to show final state
     }
 
     setShowUnnamed(show) {
       this.showUnnamed = show;
+      this._deviceOrder = []; // reset order when filter changes
       this._updateStatus();
-      this._render();
+      this._render(); // immediate for user action
     }
 
     _isNamed(device) {
@@ -58,9 +69,28 @@
     }
 
     _getVisibleDevices() {
-      const sorted = [...this.devices].sort((a, b) => (b.rssi ?? -100) - (a.rssi ?? -100));
-      if (this.showUnnamed) return sorted;
-      return sorted.filter(d => this._isNamed(d));
+      // Build stable order: keep existing order, append new devices at end sorted by RSSI
+      const deviceMap = new Map(this.devices.map(d => [d.id, d]));
+      const filtered = this.showUnnamed
+        ? this.devices
+        : this.devices.filter(d => this._isNamed(d));
+
+      // Maintain stable order: keep known ids in place, add new ones at end
+      const knownSet = new Set(this._deviceOrder);
+      const newDevices = filtered.filter(d => !knownSet.has(d.id));
+      // Sort new devices by RSSI (strongest first) before appending
+      newDevices.sort((a, b) => (b.rssi ?? -100) - (a.rssi ?? -100));
+      this._deviceOrder = [
+        ...this._deviceOrder.filter(id => deviceMap.has(id)),
+        ...newDevices.map(d => d.id)
+      ];
+
+      // Return devices in stable order
+      const filteredIds = new Set(filtered.map(d => d.id));
+      return this._deviceOrder
+        .filter(id => filteredIds.has(id))
+        .map(id => deviceMap.get(id))
+        .filter(Boolean);
     }
 
     _updateStatus() {
