@@ -15,11 +15,16 @@
     "productName": "ProximityLock",
     "files": [
       "src/**/*",
-      "assets/**/*"
+      "assets/**/*",
+      "node_modules/@vladmandic/human/dist/human.js",
+      "node_modules/@vladmandic/human/models/blazeface.*",
+      "node_modules/@vladmandic/human/models/facemesh.*",
+      "node_modules/@vladmandic/human/models/faceres.*"
     ],
     "asarUnpack": [
       "**/*.node",
-      "**/node_modules/@abandonware/**/*"
+      "**/node_modules/@abandonware/**/*",
+      "**/node_modules/@vladmandic/human/**/*"
     ],
     "mac": {
       "target": [
@@ -31,8 +36,11 @@
         }
       ],
       "category": "public.app-category.utilities",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": {
-        "NSBluetoothAlwaysUsageDescription": "ProximityLock needs Bluetooth access to monitor your device proximity and automatically lock your Mac.",
+        "NSBluetoothAlwaysUsageDescription": "ProximityLock needs Bluetooth to monitor your device proximity and lock your Mac.",
+        "NSCameraUsageDescription": "ProximityLock uses the camera for face detection to lock your Mac when you leave.",
         "LSUIElement": true
       }
     },
