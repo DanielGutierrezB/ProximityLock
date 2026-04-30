@@ -25,13 +25,17 @@ function openPrefsWindow() {
     return;
   }
   prefsWindow = new BrowserWindow({
-    width: 540,
-    height: 660,
+    width: 620,
+    height: 780,
+    minHeight: 680,
     title: 'ProximityLock',
-    resizable: false,
-    minimizable: false,
+    resizable: true,
+    minimizable: true,
     maximizable: false,
     show: false,
+    vibrancy: 'under-window',
+    transparent: true,
+    titleBarStyle: 'hiddenInset',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -190,7 +194,5 @@ app.whenReady().then(() => {
 
   // noble auto-starts scanning via stateChange → 'poweredOn'
 
-  if (!prefs.startMinimized) {
-    openPrefsWindow();
-  }
+  openPrefsWindow();
 });

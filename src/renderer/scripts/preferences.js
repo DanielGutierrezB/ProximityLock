@@ -12,6 +12,13 @@
   function rssiLabel(v) { return `${v} dBm`; }
   function delayLabel(v) { return `${v}s`; }
 
+  function updateSliderFill(el) {
+    const min = parseFloat(el.min);
+    const max = parseFloat(el.max);
+    const pct = ((parseFloat(el.value) - min) / (max - min)) * 100;
+    el.style.background = `linear-gradient(to right, #007aff 0%, #007aff ${pct}%, var(--toggle-off) ${pct}%, var(--toggle-off) 100%)`;
+  }
+
   async function init() {
     try {
       prefs = await api.getPreferences();
@@ -37,6 +44,8 @@
     $('rssi-val').textContent  = rssiLabel(prefs.rssiThreshold);
     $('lock-delay').value      = prefs.lockDelaySec;
     $('delay-val').textContent = delayLabel(prefs.lockDelaySec);
+    updateSliderFill($('rssi-threshold'));
+    updateSliderFill($('lock-delay'));
 
     $('start-on-login').checked  = prefs.startOnLogin;
     $('menu-bar-only').checked   = prefs.menuBarOnly;
@@ -58,9 +67,11 @@
   function bindEvents() {
     $('rssi-threshold').addEventListener('input', e => {
       $('rssi-val').textContent = rssiLabel(e.target.value);
+      updateSliderFill(e.target);
     });
     $('lock-delay').addEventListener('input', e => {
       $('delay-val').textContent = delayLabel(e.target.value);
+      updateSliderFill(e.target);
     });
     $('scan-btn').addEventListener('click', () => {
       if (scanning) stopScan(); else startScan();
