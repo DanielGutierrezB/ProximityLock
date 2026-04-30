@@ -17,6 +17,9 @@ const tray = new TrayManager();
 // Track when a device first drops below threshold
 let belowThresholdAt = null;
 
+// Only push full device lists when the scan modal is open
+let scanModalOpen = false;
+
 // ── Preferences window ────────────────────────────────────────────────────────
 
 function openPrefsWindow() {
@@ -109,6 +112,7 @@ ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
 ipcMain.handle(IPC.GET_DEVICES, () => bluetooth.getDeviceList());
 
 ipcMain.handle(IPC.START_SCAN, () => {
+  scanModalOpen = true;
   bluetooth.clearDevices();
   // Stop first so startScanning() doesn't bail due to this.scanning === true
   bluetooth.stopScanning();
@@ -117,10 +121,11 @@ ipcMain.handle(IPC.START_SCAN, () => {
 });
 
 ipcMain.handle(IPC.STOP_SCAN, () => {
+  scanModalOpen = false;
   bluetooth.stopScanning();
-  // Resume monitoring scan if a device is actively tracked
-  const { enabled, selectedDeviceId } = store.store;
-  if (enabled && selectedDeviceId) {
+  // Resume monitoring scan for the active device
+  const { selectedDeviceId } = store.store;
+  if (selectedDeviceId) {
     bluetooth.startScanning();
   }
   return true;
@@ -174,7 +179,10 @@ ipcMain.handle(IPC.REMOVE_DEVICE, (_e, { id }) => {
 bluetooth.on('rssiUpdate', (device) => handleRssiUpdate(device.rssi));
 
 bluetooth.on('deviceDiscovered', () => {
-  prefsWindow?.webContents.send(IPC.DEVICES_UPDATED, bluetooth.getDeviceList());
+  // Only push full device list when scan modal is open
+  if (scanModalOpen) {
+    prefsWindow?.webContents.send(IPC.DEVICES_UPDATED, bluetooth.getDeviceList());
+  }
 });
 
 bluetooth.on('stateChange', (state) => {

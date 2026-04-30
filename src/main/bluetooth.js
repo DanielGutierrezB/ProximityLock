@@ -20,8 +20,10 @@ class BluetoothManager extends EventEmitter {
     console.log('[BLE] State changed:', state);
     this.bluetoothState = state;
     this.emit('stateChange', state);
-    // Don't auto-scan on startup — wait for user to open scan panel
-    // if (state === 'poweredOn') this.startScanning();
+    // Auto-scan on startup for monitoring active device
+    if (state === 'poweredOn') {
+      this.startScanning();
+    }
   }
 
   _onDiscover(peripheral) {
@@ -33,7 +35,10 @@ class BluetoothManager extends EventEmitter {
       lastSeen: Date.now(),
     };
     this.devices.set(peripheral.id, device);
-    console.log('[BLE] Discovered:', device.name, 'RSSI:', device.rssi, 'Total:', this.devices.size);
+    // Only log monitored device to reduce noise
+    if (peripheral.id === this.monitoredDeviceId) {
+      console.log('[BLE] Monitored:', device.name, 'RSSI:', device.rssi);
+    }
     this.emit('deviceDiscovered', device);
     if (peripheral.id === this.monitoredDeviceId) {
       this.emit('rssiUpdate', device);
