@@ -77,9 +77,14 @@ class TrayManager {
     if (!enabled) this.tray?.setTitle('');
   }
 
-  // Update the text shown next to the tray icon in the menu bar
+  // Update the text shown next to the tray icon in the menu bar (macOS only)
   setTrayTitle(text) {
-    this.tray?.setTitle(text, { fontType: 'monospacedDigit' });
+    if (process.platform === 'darwin') {
+      this.tray?.setTitle(text, { fontType: 'monospacedDigit' });
+    } else {
+      // Windows: use tooltip instead
+      this.tray?.setToolTip(text ? `ProximityLock — ${text}` : 'ProximityLock');
+    }
   }
 
   sendFaceStatus(data) {
@@ -151,12 +156,24 @@ class TrayManager {
       y: trayBounds.y,
     }).workArea;
 
-    // Center popup horizontally on tray icon, appear just below menu bar
+    // Center popup horizontally on tray icon
     let x = Math.round(trayBounds.x + trayBounds.width / 2 - POPUP_WIDTH / 2);
-    const y = Math.round(trayBounds.y + trayBounds.height + 4);
+    let y;
+
+    if (process.platform === 'win32') {
+      // Windows: tray is at the bottom, popup goes above
+      y = Math.round(trayBounds.y - POPUP_HEIGHT - 4);
+    } else {
+      // macOS: tray is at the top, popup goes below
+      y = Math.round(trayBounds.y + trayBounds.height + 4);
+    }
 
     // Clamp to screen horizontal bounds
+    const { y: areaY, height: areaH } = screen.getDisplayNearestPoint({
+      x: trayBounds.x, y: trayBounds.y,
+    }).workArea;
     x = Math.max(areaX, Math.min(x, areaX + areaW - POPUP_WIDTH));
+    y = Math.max(areaY, Math.min(y, areaY + areaH - POPUP_HEIGHT));
 
     this.popupWindow.setPosition(x, y, false);
     this.popupWindow.show();

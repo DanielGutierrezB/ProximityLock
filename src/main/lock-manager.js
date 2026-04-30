@@ -27,16 +27,22 @@ class LockManager extends EventEmitter {
   }
 
   lockNow() {
-    // Modern macOS: launch ScreenSaverEngine (locks if password-on-wake is enabled)
-    // Then fallback to pmset displaysleepnow
-    exec('open -a ScreenSaverEngine', (err) => {
-      if (err) {
-        console.error('lock: ScreenSaverEngine failed:', err.message);
-        exec('pmset displaysleepnow', (err2) => {
-          if (err2) console.error('lock: pmset fallback failed:', err2.message);
-        });
-      }
-    });
+    if (process.platform === 'win32') {
+      // Windows: lock workstation via rundll32
+      exec('rundll32.exe user32.dll,LockWorkStation', (err) => {
+        if (err) console.error('lock: Windows LockWorkStation failed:', err.message);
+      });
+    } else {
+      // macOS: launch ScreenSaverEngine, fallback to pmset
+      exec('open -a ScreenSaverEngine', (err) => {
+        if (err) {
+          console.error('lock: ScreenSaverEngine failed:', err.message);
+          exec('pmset displaysleepnow', (err2) => {
+            if (err2) console.error('lock: pmset fallback failed:', err2.message);
+          });
+        }
+      });
+    }
     this.emit('locked');
   }
 

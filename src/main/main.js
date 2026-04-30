@@ -29,13 +29,18 @@ function openPrefsWindow() {
     resizable: true,
     minimizable: true,
     show: false,
-    vibrancy: 'under-window',
-    transparent: true,
-    titleBarStyle: 'hiddenInset',
+    ...(process.platform === 'darwin' ? {
+      vibrancy: 'under-window',
+      transparent: true,
+      titleBarStyle: 'hiddenInset',
+    } : {
+      backgroundColor: '#1e1e1e',
+      frame: true,
+    }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false,
+      sandbox: false, // Required: preload uses require() for path + electron modules
       preload: path.join(__dirname, 'preload.js'),
     },
   });
@@ -54,6 +59,7 @@ function openPrefsWindow() {
 ipcMain.handle(IPC.GET_PREFERENCES, () => store.store);
 
 ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
+  if (!prefs || typeof prefs !== 'object') return false;
   const ALLOWED = ['startOnLogin', 'menuBarOnly', 'showInDock', 'startMinimized', 'notifications', 'cameraCheckInterval', 'cameraLockDelay', 'showCameraPreview', 'selectedCameraId', 'matchThreshold', 'autoMonitor'];
   for (const key of ALLOWED) {
     if (key in prefs) store.set(key, prefs[key]);
@@ -70,10 +76,13 @@ ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
   return true;
 });
 
-ipcMain.handle(IPC.FACE_ENROLL, (_e, { descriptor, photo }) => {
-  store.set('faceDescriptor', descriptor);
-  store.set('facePhoto', photo);
-  console.log('[FACE] Enrolled face, descriptor length:', descriptor.length);
+ipcMain.handle(IPC.FACE_ENROLL, (_e, data) => {
+  if (!data || !Array.isArray(data.descriptor) || typeof data.photo !== 'string') return false;
+  if (data.descriptor.length > 4096) return false; // sanity check
+  if (data.photo.length > 500000) return false; // ~375KB base64 max
+  store.set('faceDescriptor', data.descriptor);
+  store.set('facePhoto', data.photo);
+  console.log('[FACE] Enrolled face, descriptor length:', data.descriptor.length);
   return true;
 });
 
@@ -116,6 +125,7 @@ function toggleEnabled() {
 ipcMain.handle(IPC.ENABLE_TOGGLE, toggleEnabled);
 
 ipcMain.handle(IPC.ENABLE_SET, (_e, enabled) => {
+  if (typeof enabled !== 'boolean') return false;
   store.set('enabled', enabled);
   tray.setEnabled(enabled);
   if (!enabled) {

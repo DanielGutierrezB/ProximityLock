@@ -46,6 +46,24 @@
     },
     "dmg": {
       "title": "ProximityLock"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icons/icon.ico",
+      "uninstallerIcon": "assets/icons/icon.ico",
+      "installerHeaderIcon": "assets/icons/icon.png"
     }
   },
   "dependencies": {
@@ -57,5 +75,9 @@
     "electron": "^29.4.6",
     "electron-builder": "^24.13.3"
   },
-  "type": "commonjs"
+  "type": "commonjs",
+  "author": {
+    "name": "Daniel Guti\u00e9rrez",
+    "email": "daniel@proximitylock.app"
+  }
 }
