@@ -14,7 +14,7 @@
   const CAMERA_LOCK_COOLDOWN_MS = 30000;
   let lastCameraLockAt = 0;
   let cameraTimerUpdateId = null;
-  let previewOn = prefs.showCameraPreview || false;
+  let previewOn = prefs.showCameraPreview !== false; // default ON
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@
     const lockDelaySec = parseFloat($('camera-lock-delay').value);
     const cooldownRemaining = CAMERA_LOCK_COOLDOWN_MS - (now - lastCameraLockAt);
 
-    if (elapsed >= lockDelaySec && cooldownRemaining <= 0) {
+    if (monitoring && elapsed >= lockDelaySec && cooldownRemaining <= 0) {
       lastCameraLockAt = now;
       noFaceAt = now;
       api.lockNow();
@@ -271,36 +271,42 @@
     }
   });
 
-  // Camera selector
+  // Camera selector — auto-start detection when camera is selected
   $('camera-select').addEventListener('change', async () => {
     const camId = $('camera-select').value || '';
     api.savePreferences({ selectedCameraId: camId });
     prefs.selectedCameraId = camId;
+
+    if (!camId) {
+      // "Select a camera..." chosen — stop everything
+      stopCamera();
+      return;
+    }
+
+    // Start or restart camera with selected device
     if (cameraActive && faceDetector) {
       faceDetector.stop();
       cameraActive = false;
-      const intervalMs = parseFloat($('camera-check-interval').value || '1') * 1000;
-      await faceDetector.start(intervalMs, camId || undefined);
-      cameraActive = true;
-      updatePreviewUI();
     }
+    await startCamera();
   });
 
-  // Start/Stop Monitoring
+  // Start/Stop Monitoring — only controls LOCKING, not camera
   $('monitoring-toggle-btn').addEventListener('click', async () => {
     if (!monitoring) {
-      const camId = $('camera-select').value;
-      if (!camId) {
-        alert('Please select a camera first');
-        return;
+      if (!cameraActive) {
+        const camId = $('camera-select').value;
+        if (!camId) {
+          alert('Please select a camera first');
+          return;
+        }
+        await startCamera();
       }
       monitoring = true;
       await api.enableToggle();
-      await startCamera();
     } else {
       monitoring = false;
       await api.enableToggle();
-      stopCamera();
     }
     updateMonitoringBtn();
   });
