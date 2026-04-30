@@ -8,263 +8,95 @@
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-  <div class="titlebar">
-    <span class="titlebar-title">ProximityLock</span>
-    <span class="titlebar-version">v1.0.0</span>
+
+  <div class="app-header">
+    <span class="app-title">ProximityLock</span> <span class="app-version">v1.0.0</span>
+    <button class="settings-gear" id="settings-gear-btn" title="Settings">⚙</button>
   </div>
 
-  <div class="app-layout">
+  <div class="app-content">
 
-    <!-- ── LEFT COLUMN: Device Management ── -->
-    <div class="col col-left">
-
-      <div class="settings-section" data-section="my-devices">
-        <button class="section-header">
-          <span>My Devices</span>
-          <span class="collapse-arrow">▼</span>
-        </button>
-        <div class="section-body">
-          <div class="card">
-            <div id="saved-devices-list"></div>
-          </div>
+    <!-- Camera preview -->
+    <div class="card cam-preview-card">
+      <div class="cam-preview-wrap" id="cam-preview-wrap">
+        <video id="camera-preview-video" autoplay muted playsinline></video>
+        <div class="cam-preview-off" id="cam-preview-off">
+          <span class="cam-off-icon">📷</span>
+          <span class="cam-off-text">Camera off — click Start Monitoring</span>
         </div>
       </div>
-
-      <div class="add-device-row">
-        <button class="btn btn-secondary btn-add-device" id="add-device-btn">+ Add Device</button>
+      <div class="cam-info-row">
+        <select id="camera-select" class="cam-select">
+          <option value="">Select a camera…</option>
+        </select>
       </div>
-
-      <!-- Scan overlay/modal -->
-      <div class="scan-overlay hidden" id="scan-overlay">
-        <div class="scan-panel">
-          <div class="scan-panel-header">
-            <span class="scan-panel-title">Add Device</span>
-            <button class="scan-panel-close" id="scan-close-btn">✕</button>
-          </div>
-          <div id="device-list-el"></div>
-          <div class="device-actions">
-            <span class="status-text" id="scan-status">Scanning…</span>
-            <label class="unnamed-toggle">
-              <input type="checkbox" id="show-unnamed">
-              <span>Unnamed</span>
-            </label>
-            <button class="btn btn-secondary" id="scan-btn">Stop</button>
-          </div>
-        </div>
+      <div class="cam-status-row">
+        <span class="detection-status-text" id="detection-status-text">Idle</span>
+        <span class="detection-timer" id="detection-timer"></span>
       </div>
-
     </div>
 
-    <!-- ── RIGHT COLUMN: Settings ── -->
-    <div class="col col-right">
-
-      <!-- Lock Mode Selector (with gear button for camera mode) -->
-      <div class="lock-mode-selector">
-        <div class="lock-mode-control">
-          <button class="lock-mode-btn" id="mode-bt">Bluetooth</button>
-          <button class="lock-mode-btn" id="mode-camera">Camera</button>
-        </div>
-        <button class="gear-btn camera-only" id="settings-gear-btn" style="display:none" title="Camera Settings">⚙</button>
-      </div>
-
-      <!-- BT Mode: Live Signal -->
-      <div class="settings-section bt-only" data-section="signal">
-        <button class="section-header">
-          <span>Live Signal</span>
-          <span class="collapse-arrow">▼</span>
-        </button>
-        <div class="section-body">
-          <div class="card">
-            <div id="signal-meter-el"></div>
-          </div>
+    <!-- Enrollment -->
+    <div class="card cam-enroll-card">
+      <div id="enrolled-photo-container" class="cam-enroll-row" style="display:none">
+        <img id="enrolled-photo" class="cam-enroll-thumb">
+        <div class="cam-enroll-info">
+          <span id="enrolled-name">✅ Face enrolled</span>
+          <button class="btn btn-sm btn-danger" id="re-enroll-btn">🔄 Retake</button>
         </div>
       </div>
-
-      <!-- BT Mode: Lock Sensitivity -->
-      <div class="settings-section bt-only" data-section="lock-sensitivity">
-        <button class="section-header">
-          <span>Lock Sensitivity</span>
-          <span class="collapse-arrow">▼</span>
-        </button>
-        <div class="section-body">
-          <div class="card card-body">
-            <div class="slider-row">
-              <div class="slider-header">
-                <label for="rssi-threshold">Lock Distance</label>
-                <span class="slider-val" id="rssi-val">—</span>
-              </div>
-              <p class="control-desc">How far your device can go before locking. Closer = locks sooner when you walk away.</p>
-              <input type="range" id="rssi-threshold" min="-85" max="-55" step="1">
-              <div class="slider-labels"><span>~5 m</span><span>~3 m</span><span>~1 m</span></div>
-            </div>
-            <div class="slider-divider"></div>
-            <div class="slider-row">
-              <div class="slider-header">
-                <label for="lock-delay">Lock Delay</label>
-                <span class="slider-val" id="delay-val">— s</span>
-              </div>
-              <p class="control-desc">How long to wait before locking after your device leaves range.</p>
-              <input type="range" id="lock-delay" min="1" max="15" step="1">
-              <div class="slider-labels"><span>1 s</span><span>8 s</span><span>15 s</span></div>
-            </div>
-          </div>
-        </div>
+      <div id="enroll-prompt" class="cam-enroll-prompt">
+        <span>📸</span>
+        <span>Take a photo to enable face recognition</span>
+        <button class="btn btn-sm btn-primary" id="enroll-btn">Take Photo</button>
       </div>
+    </div>
 
-      <!-- Camera Mode: Main card (preview + camera selector + detection status) -->
-      <div class="camera-only" style="display:none">
-        <div class="card camera-card">
-          <div class="camera-preview-wrap">
-            <video id="camera-preview-video" autoplay muted playsinline></video>
-            <div class="camera-preview-off" id="camera-preview-off">
-              <span class="preview-off-icon">⊘</span>
-              <span class="preview-off-text">Preview Off — detection still active</span>
-            </div>
-          </div>
-          <div class="camera-select-row">
-            <span class="camera-icon-label">📷</span>
-            <select id="camera-select">
-              <option value="">Default Camera</option>
-            </select>
-          </div>
-          <div class="detection-status">
-            <span class="detection-status-text" id="detection-status-text">Waiting…</span>
-            <span class="detection-timer" id="detection-timer"></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Camera Mode: Enrolled face compact card -->
-      <div class="camera-only" style="display:none">
-        <div class="card enroll-card">
-          <div id="enroll-container">
-            <div id="enrolled-photo-container" style="display:none">
-              <img id="enrolled-photo" class="enroll-thumb">
-              <div class="enroll-info">
-                <div class="enroll-name" id="enrolled-name">✅ Face enrolled</div>
-                <button class="btn btn-secondary" id="re-enroll-btn" style="font-size:11px;padding:4px 10px">📸 Retake</button>
-              </div>
-            </div>
-            <div id="enroll-prompt">
-              <p style="margin:0 0 6px;color:var(--text-secondary);font-size:12px">Take a photo so the app recognizes <strong>your face</strong> specifically.</p>
-              <button class="btn btn-primary" id="enroll-btn">📸 Take Photo</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Camera Mode: Action buttons row -->
-      <div class="camera-only camera-actions-row" style="display:none">
-        <button class="btn btn-secondary btn-sm" id="preview-toggle-btn">👁 Preview</button>
-        <button class="btn btn-success btn-sm" id="monitoring-toggle-btn">▶ Start Monitoring</button>
-        <button class="btn btn-danger btn-sm" id="lock-now-btn-cam">🔒 Lock Now</button>
-      </div>
-
-      <!-- App Behavior (BT mode only — camera mode uses settings overlay) -->
-      <div class="settings-section bt-only" data-section="app-behavior">
-        <button class="section-header">
-          <span>App Behavior</span>
-          <span class="collapse-arrow">▼</span>
-        </button>
-        <div class="section-body">
-          <div class="card">
-            <div class="pref-row">
-              <div class="pref-label-group">
-                <span class="pref-label">Start on Login</span>
-                <span class="pref-desc">Automatically launch when you log in.</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="start-on-login">
-                <span class="toggle-knob"></span>
-              </label>
-            </div>
-            <div class="pref-row">
-              <div class="pref-label-group">
-                <span class="pref-label">Menu Bar Only</span>
-                <span class="pref-desc">Run as a menu bar app with no Dock icon.</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="menu-bar-only">
-                <span class="toggle-knob"></span>
-              </label>
-            </div>
-            <div class="pref-row">
-              <div class="pref-label-group">
-                <span class="pref-label">Show in Dock</span>
-                <span class="pref-desc">Show the app icon in your Dock.</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="show-in-dock">
-                <span class="toggle-knob"></span>
-              </label>
-            </div>
-            <div class="pref-row">
-              <div class="pref-label-group">
-                <span class="pref-label">Start Minimized</span>
-                <span class="pref-desc">Open the settings window minimized at launch.</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="start-minimized">
-                <span class="toggle-knob"></span>
-              </label>
-            </div>
-            <div class="pref-row pref-row--last">
-              <div class="pref-label-group">
-                <span class="pref-label">Show Lock Notifications</span>
-                <span class="pref-desc">Display a notification when your screen is locked.</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="notifications">
-                <span class="toggle-knob"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="footer bt-only">
-        <button class="btn btn-warning" id="pause-btn">⏸ Pause Monitoring</button>
-        <button class="btn btn-danger" id="lock-now-btn">Lock Screen Now</button>
-        <button class="btn btn-primary" id="save-btn">Save</button>
-      </div>
-
-      <!-- Camera Settings Overlay -->
-      <div class="settings-overlay hidden" id="settings-overlay">
-        <div class="settings-panel">
-          <div class="settings-panel-header">
-            <span class="settings-panel-title">Camera Settings</span>
-            <button class="settings-panel-close" id="settings-close-btn">✕</button>
-          </div>
-          <div class="settings-panel-body">
-            <div class="slider-row">
-              <div class="slider-header">
-                <label for="camera-lock-delay">Lock after no face for</label>
-                <span class="slider-val" id="camera-lock-delay-val">— s</span>
-              </div>
-              <p class="control-desc">Lock the screen after this many seconds with no face detected.</p>
-              <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
-              <div class="slider-labels"><span>3 s</span><span>15 s</span><span>30 s</span></div>
-            </div>
-            <div class="slider-divider"></div>
-            <div class="slider-row">
-              <div class="slider-header">
-                <label for="camera-check-interval">Check every</label>
-                <span class="slider-val" id="camera-check-interval-val">— s</span>
-              </div>
-              <p class="control-desc">How often to run face detection. Lower values use more CPU.</p>
-              <input type="range" id="camera-check-interval" min="0.5" max="3" step="0.5">
-              <div class="slider-labels"><span>0.5 s</span><span>1.5 s</span><span>3 s</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <!-- Actions -->
+    <div class="cam-actions">
+      <button class="btn btn-sm btn-secondary" id="preview-toggle-btn">👁 Preview</button>
+      <button class="btn btn-sm btn-success" id="monitoring-toggle-btn">▶ Start Monitoring</button>
+      <button class="btn btn-sm btn-danger" id="lock-now-btn">🔒 Lock Now</button>
     </div>
 
   </div>
 
-  <script src="scripts/signal-meter.js"></script>
-  <script src="scripts/device-list.js"></script>
+  <!-- Settings overlay -->
+  <div class="settings-overlay hidden" id="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-panel-header">
+        <span>⚙ Settings</span>
+        <button class="settings-close" id="settings-close-btn">✕</button>
+      </div>
+      <div class="settings-panel-body">
+        <h4>Face Detection</h4>
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="camera-lock-delay">Lock after no face for</label>
+            <span class="slider-val" id="camera-lock-delay-val">— s</span>
+          </div>
+          <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
+          <div class="slider-labels"><span>3 s</span><span>15 s</span><span>30 s</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="camera-check-interval">Check every</label>
+            <span class="slider-val" id="camera-check-interval-val">— s</span>
+          </div>
+          <input type="range" id="camera-check-interval" min="0.5" max="3" step="0.5">
+          <div class="slider-labels"><span>0.5 s</span><span>1.5 s</span><span>3 s</span></div>
+        </div>
+        <h4 style="margin-top:16px">App</h4>
+        <div class="pref-row"><div class="pref-label-group"><span class="pref-label">Start on Login</span></div><label class="toggle-switch"><input type="checkbox" id="start-on-login"><span class="toggle-knob"></span></label></div>
+        <div class="pref-row"><div class="pref-label-group"><span class="pref-label">Menu Bar Only</span></div><label class="toggle-switch"><input type="checkbox" id="menu-bar-only"><span class="toggle-knob"></span></label></div>
+        <div class="pref-row"><div class="pref-label-group"><span class="pref-label">Notifications</span></div><label class="toggle-switch"><input type="checkbox" id="notifications"><span class="toggle-knob"></span></label></div>
+      </div>
+      <div class="settings-panel-footer">
+        <button class="btn btn-primary btn-sm" id="settings-save-btn">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
   <script src="scripts/face-detector.js"></script>
   <script src="scripts/preferences.js"></script>
 </body>
