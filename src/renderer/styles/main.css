@@ -781,8 +781,7 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   display: block;
   width: 100%;
   height: auto;
-  max-height: 200px;
-  object-fit: cover;
+  object-fit: contain;
   background: #000;
   border-radius: var(--radius) var(--radius) 0 0;
 }

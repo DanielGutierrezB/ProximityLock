@@ -197,6 +197,18 @@
     });
     $('mode-bt').classList.toggle('active', mode === 'bluetooth');
     $('mode-camera').classList.toggle('active', mode === 'camera');
+
+    // Hide left column (devices panel) in camera mode — not needed
+    const leftCol = document.querySelector('.col-left');
+    if (leftCol) {
+      leftCol.style.display = mode === 'camera' ? 'none' : '';
+    }
+    // In camera mode, right column takes full width
+    const rightCol = document.querySelector('.col-right');
+    if (rightCol) {
+      rightCol.style.flex = mode === 'camera' ? '1' : '';
+      rightCol.style.maxWidth = mode === 'camera' ? '100%' : '';
+    }
   }
 
   function onFaceStatus({ detected, recognized, similarity }) {
@@ -357,6 +369,8 @@
   async function setLockMode(mode) {
     lockMode = mode;
     applyLockModeUI(mode);
+    // Save mode immediately so it persists across restarts
+    api.savePreferences({ lockMode: mode });
     if (mode === 'camera') {
       await startCameraMode();
     } else {
