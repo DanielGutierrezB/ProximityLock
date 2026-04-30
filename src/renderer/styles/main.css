@@ -728,7 +728,9 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
 .lock-mode-selector {
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: 2px 0 4px;
+  position: relative;
 }
 
 .lock-mode-control {
@@ -764,10 +766,68 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   color: var(--text-primary);
 }
 
+/* ── Gear button ── */
+.gear-btn {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  transition: background 0.1s, color 0.1s;
+  -webkit-app-region: no-drag;
+  line-height: 1;
+}
+.gear-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
 /* ── Camera Mode ── */
 .camera-card {
   padding: 0;
   overflow: hidden;
+}
+
+/* 16:9 preview container */
+.camera-preview-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+
+.camera-preview-wrap video {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.camera-preview-off {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #111;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  text-align: center;
+}
+
+.preview-off-icon {
+  font-size: 28px;
+  opacity: 0.35;
 }
 
 .camera-select-row {
@@ -775,25 +835,33 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   align-items: center;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
+  gap: 8px;
 }
 
-.camera-card video {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 180px;
-  object-fit: contain;
-  background: #000;
-  border-radius: var(--radius) var(--radius) 0 0;
+.camera-icon-label {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.camera-select-row select {
+  flex: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
 }
 
 .detection-status {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 9px 14px;
   border-top: 1px solid var(--divider);
-  min-height: 40px;
+  min-height: 38px;
 }
 
 .detection-status-text {
@@ -813,18 +881,128 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   font-variant-numeric: tabular-nums;
 }
 
-/* Toggle row inside .card-body (camera settings) */
-.camera-settings-toggle {
+/* ── Enrolled face compact card ── */
+.enroll-card {
+  padding: 12px 14px;
+}
+
+.enroll-card #enrolled-photo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.enroll-thumb {
+  width: 64px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-card-hover);
+}
+
+.enroll-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.enroll-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--green);
+}
+
+.enroll-card #enroll-prompt {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--divider);
+  gap: 12px;
 }
 
-.camera-settings-toggle .pref-label {
-  font-size: 13px;
+/* ── Camera actions row ── */
+.camera-actions-row {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+/* ── Settings overlay (camera mode) ── */
+.settings-overlay {
+  position: fixed;
+  top: 52px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 90;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.15s ease;
+}
+
+.settings-overlay.hidden {
+  display: none;
+}
+
+.settings-panel {
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.28);
+  width: 380px;
+  max-width: 90vw;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settings-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.settings-panel-title {
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
-  font-weight: 400;
+}
+
+.settings-panel-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.1s;
+  font-family: inherit;
+}
+.settings-panel-close:hover { background: var(--bg-card-hover); }
+
+.settings-panel-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-panel {
+    background: var(--bg-body);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .settings-overlay {
+    background: rgba(0, 0, 0, 0.65);
+  }
 }

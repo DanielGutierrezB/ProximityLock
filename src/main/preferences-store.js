@@ -18,7 +18,7 @@ const schema = {
   lockMode:           { type: 'string',  default: 'bluetooth' },
   cameraCheckInterval:{ type: 'number',  default: 1 },
   cameraLockDelay:    { type: 'number',  default: 10 },
-  showCameraPreview:  { type: 'boolean', default: true },
+  showCameraPreview:  { type: 'boolean', default: false },
   faceDescriptor:     { type: ['array', 'null'],  default: null },
   facePhoto:          { type: ['string', 'null'], default: null },
 };

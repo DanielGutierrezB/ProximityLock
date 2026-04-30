@@ -18,6 +18,7 @@
   let noFaceAt     = null;
   let lastCameraLockAt     = 0;
   let cameraTimerUpdateId  = null;
+  let showPreview  = false;
   const CAMERA_LOCK_COOLDOWN_MS = 30000;
 
   function $(id) { return document.getElementById(id); }
@@ -198,6 +199,12 @@
     $('mode-bt').classList.toggle('active', mode === 'bluetooth');
     $('mode-camera').classList.toggle('active', mode === 'camera');
 
+    // Close settings panel when leaving camera mode
+    if (mode !== 'camera') {
+      const overlay = $('settings-overlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
     // Hide left column (devices panel) in camera mode — not needed
     const leftCol = document.querySelector('.col-left');
     if (leftCol) {
@@ -305,10 +312,22 @@
   }
 
   function updateCameraPreviewVisibility() {
-    const video = $('camera-preview-video');
-    if (!video) return;
-    const showEl = $('show-camera-preview');
-    video.style.display = (showEl && showEl.checked) ? '' : 'none';
+    const video      = $('camera-preview-video');
+    const previewOff = $('camera-preview-off');
+    const btn        = $('preview-toggle-btn');
+    if (video)      video.style.display      = showPreview ? '' : 'none';
+    if (previewOff) previewOff.style.display = showPreview ? 'none' : '';
+    if (btn)        btn.textContent          = showPreview ? '👁 Preview On' : '👁 Preview Off';
+  }
+
+  function togglePreview() {
+    showPreview = !showPreview;
+    updateCameraPreviewVisibility();
+  }
+
+  function toggleSettingsPanel() {
+    const overlay = $('settings-overlay');
+    if (overlay) overlay.classList.toggle('hidden');
   }
 
   async function populateCameraList() {
@@ -437,14 +456,13 @@
     $('notifications').checked   = prefs.notifications;
 
     // Camera sliders / toggles
-    const camDelay    = prefs.cameraLockDelay    ?? 5;
+    const camDelay    = prefs.cameraLockDelay    ?? 10;
     const camInterval = prefs.cameraCheckInterval ?? 1;
-    const showPreview = prefs.showCameraPreview   !== false;
-    $('camera-lock-delay').value         = camDelay;
-    $('camera-lock-delay-val').textContent = camDelay + ' s';
-    $('camera-check-interval').value     = camInterval;
+    showPreview = !!prefs.showCameraPreview;
+    $('camera-lock-delay').value               = camDelay;
+    $('camera-lock-delay-val').textContent     = camDelay + ' s';
+    $('camera-check-interval').value           = camInterval;
     $('camera-check-interval-val').textContent = camInterval.toFixed(1) + ' s';
-    $('show-camera-preview').checked     = showPreview;
     updateSliderFill($('camera-lock-delay'));
     updateSliderFill($('camera-check-interval'));
 
@@ -518,7 +536,23 @@
         faceDetector.setCheckInterval(val * 1000);
       }
     });
-    $('show-camera-preview').addEventListener('change', updateCameraPreviewVisibility);
+    // Camera preview toggle button
+    if ($('preview-toggle-btn')) {
+      $('preview-toggle-btn').addEventListener('click', togglePreview);
+    }
+
+    // Settings gear / close
+    if ($('settings-gear-btn')) {
+      $('settings-gear-btn').addEventListener('click', toggleSettingsPanel);
+    }
+    if ($('settings-close-btn')) {
+      $('settings-close-btn').addEventListener('click', toggleSettingsPanel);
+    }
+    if ($('settings-overlay')) {
+      $('settings-overlay').addEventListener('click', e => {
+        if (e.target === $('settings-overlay')) toggleSettingsPanel();
+      });
+    }
 
     // Mode buttons
     $('mode-bt').addEventListener('click',     () => setLockMode('bluetooth'));
@@ -621,7 +655,7 @@
       lockMode:            lockMode,
       cameraLockDelay:     parseFloat($('camera-lock-delay').value),
       cameraCheckInterval: parseFloat($('camera-check-interval').value),
-      showCameraPreview:   $('show-camera-preview').checked,
+      showCameraPreview:   showPreview,
     };
     await api.savePreferences(updated);
     const btn = $('save-btn');
