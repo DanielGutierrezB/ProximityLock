@@ -141,3 +141,14 @@ input[type="range"]::-webkit-slider-thumb {
 .btn-warning       { background: var(--orange); color: white; }
 .btn-outline       { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
 .btn-danger-outline { background: transparent; color: var(--red); border: 1px solid var(--red); }
+
+/* Camera selector */
+.popup-select {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  font-size: 11px;
+}

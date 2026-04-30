@@ -14,75 +14,80 @@
     <button class="settings-gear" id="settings-gear-btn" title="Settings">⚙</button>
   </div>
 
-  <div class="app-content">
+  <div class="app-layout">
 
-    <!-- Camera preview -->
-    <div class="card cam-preview-card">
-      <div class="cam-preview-wrap" id="cam-preview-wrap">
-        <video id="camera-preview-video" autoplay muted playsinline></video>
-        <div class="cam-preview-off" id="cam-preview-off">
-          <span class="cam-off-icon">📷</span>
-          <span class="cam-off-text">Camera off — click Start Monitoring</span>
+    <!-- LEFT: Preview -->
+    <div class="col-preview">
+      <div class="card cam-preview-card">
+        <div class="cam-preview-wrap" id="cam-preview-wrap">
+          <video id="camera-preview-video" autoplay muted playsinline></video>
+          <div class="cam-preview-off" id="cam-preview-off">
+            <span class="cam-off-icon">📷</span>
+            <span class="cam-off-text">Select a camera to start</span>
+          </div>
         </div>
       </div>
-      <div class="cam-info-row">
+      <div class="cam-preview-footer">
         <select id="camera-select" class="cam-select">
           <option value="">Select a camera…</option>
         </select>
+        <button class="btn btn-sm btn-secondary" id="preview-toggle-btn">👁 Preview Off</button>
       </div>
-      <div class="cam-status-row">
+      <div class="cam-status-bar">
         <span class="detection-status-text" id="detection-status-text">Idle</span>
         <span class="detection-timer" id="detection-timer"></span>
       </div>
-      <div class="cam-preview-toggle-row">
-        <button class="btn btn-secondary btn-block" id="preview-toggle-btn">👁 Preview Off</button>
-      </div>
     </div>
 
-    <!-- Threshold controls -->
-    <div class="card cam-threshold-card">
-      <div class="threshold-row">
-        <div class="threshold-label">
-          <label>Match threshold</label>
-          <span class="threshold-desc">Minimum similarity % to count as "you". Lower = more lenient.</span>
-        </div>
-        <div class="threshold-control">
-          <input type="range" id="match-threshold" min="20" max="80" step="5" value="35">
-          <span class="slider-val" id="match-threshold-val">35%</span>
-        </div>
-      </div>
-      <div class="threshold-row">
-        <div class="threshold-label">
-          <label>Lock delay</label>
-          <span class="threshold-desc">Seconds without your face before locking the screen.</span>
-        </div>
-        <div class="threshold-control">
-          <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
-          <span class="slider-val" id="camera-lock-delay-val">— s</span>
-        </div>
-      </div>
-    </div>
+    <!-- RIGHT: Controls -->
+    <div class="col-controls">
 
-    <!-- Enrollment -->
-    <div class="card cam-enroll-card">
-      <div id="enrolled-photo-container" class="cam-enroll-row" style="display:none">
-        <img id="enrolled-photo" class="cam-enroll-thumb">
-        <div class="cam-enroll-info">
-          <span id="enrolled-name">✅ Face enrolled</span>
-          <button class="btn btn-sm btn-danger" id="re-enroll-btn">🔄 Retake</button>
+      <!-- Enrollment -->
+      <div class="card cam-enroll-card">
+        <div id="enrolled-photo-container" class="cam-enroll-row" style="display:none">
+          <img id="enrolled-photo" class="cam-enroll-thumb">
+          <div class="cam-enroll-info">
+            <span id="enrolled-name">✅ Face enrolled</span>
+            <button class="btn btn-xs btn-danger" id="re-enroll-btn">🔄 Retake</button>
+          </div>
+        </div>
+        <div id="enroll-prompt" class="cam-enroll-prompt">
+          <span>📸</span>
+          <span>Take a photo to enroll your face</span>
+          <button class="btn btn-xs btn-primary" id="enroll-btn">Take Photo</button>
         </div>
       </div>
-      <div id="enroll-prompt" class="cam-enroll-prompt">
-        <span>📸</span>
-        <span>Take a photo to enable face recognition</span>
-        <button class="btn btn-sm btn-primary" id="enroll-btn">Take Photo</button>
-      </div>
-    </div>
 
-    <!-- Actions -->
-    <div class="cam-actions">
-      <button class="btn btn-sm btn-success" id="monitoring-toggle-btn">▶ Start Monitoring</button>
-      <button class="btn btn-sm btn-danger" id="lock-now-btn">🔒 Lock Now</button>
+      <!-- Thresholds -->
+      <div class="card cam-threshold-card">
+        <div class="threshold-row">
+          <div class="threshold-label">
+            <label>Match threshold</label>
+            <span class="threshold-desc">Min similarity to count as you</span>
+          </div>
+          <div class="threshold-control">
+            <input type="range" id="match-threshold" min="20" max="80" step="5" value="35">
+            <span class="slider-val" id="match-threshold-val">35%</span>
+          </div>
+        </div>
+        <div class="threshold-row">
+          <div class="threshold-label">
+            <label>Lock delay</label>
+            <span class="threshold-desc">Seconds without face before lock</span>
+          </div>
+          <div class="threshold-control">
+            <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
+            <span class="slider-val" id="camera-lock-delay-val">— s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="cam-actions">
+        <button class="btn btn-success" id="monitoring-toggle-btn">▶ Start Monitoring</button>
+        <button class="btn btn-danger" id="lock-now-btn">🔒 Lock Now</button>
+      </div>
+
     </div>
 
   </div>

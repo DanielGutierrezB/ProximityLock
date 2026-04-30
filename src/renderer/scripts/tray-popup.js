@@ -7,6 +7,35 @@
 
   let monitoring = prefs.enabled || false;
 
+  // ── Camera selector ───────────────────────────────────────────────────────
+
+  async function populatePopupCameras() {
+    try {
+      let tempStream = null;
+      try { tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); } catch (_) {}
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(d => d.kind === 'videoinput');
+      if (tempStream) tempStream.getTracks().forEach(t => t.stop());
+      const select = $('popup-camera-select');
+      const savedId = prefs.selectedCameraId || '';
+      select.innerHTML = '<option value="">Select a camera…</option>';
+      cameras.forEach((cam, i) => {
+        const opt = document.createElement('option');
+        opt.value = cam.deviceId;
+        opt.textContent = cam.label || `Camera ${i + 1}`;
+        if (cam.deviceId === savedId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    } catch (e) { console.error('[Popup] enumerate failed:', e.message); }
+  }
+
+  await populatePopupCameras();
+
+  $('popup-camera-select').addEventListener('change', () => {
+    const camId = $('popup-camera-select').value || '';
+    api.savePreferences({ selectedCameraId: camId });
+  });
+
   // ── Init sliders ──────────────────────────────────────────────────────────
 
   const matchEl = $('popup-match-threshold');

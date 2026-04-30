@@ -47,7 +47,7 @@ const ICON_CACHE = {
 };
 
 const POPUP_WIDTH  = 280;
-const POPUP_HEIGHT = 340;
+const POPUP_HEIGHT = 380;
 
 class TrayManager {
   constructor() {

@@ -1,4 +1,4 @@
-/* ── ProximityLock — Camera-only theme ── */
+/* ── ProximityLock — Two-column layout ── */
 
 :root {
   --bg: #1e1e1e;
@@ -27,12 +27,12 @@ body {
   flex-direction: column;
 }
 
-/* ── App header ── */
+/* ── Header ── */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px 8px;
+  padding: 10px 16px 6px;
   position: relative;
 }
 .app-title { font-weight: 600; font-size: 13px; }
@@ -43,39 +43,44 @@ body {
   background: none;
   border: none;
   font-size: 20px;
-  color: var(--text-primary);
   cursor: pointer;
   -webkit-app-region: no-drag;
+  color: var(--text-primary);
   opacity: 1;
   transition: opacity 0.2s;
 }
-.settings-gear:hover { opacity: 0.75; }
+.settings-gear:hover { opacity: 0.7; }
 
-/* ── App content ── */
-.app-content {
+/* ── Two-column layout ── */
+.app-layout {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 0 14px 12px;
+  -webkit-app-region: no-drag;
+  min-height: 0;
+}
+
+/* LEFT: Preview column */
+.col-preview {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 0 16px 12px;
-  overflow-y: auto;
-  -webkit-app-region: no-drag;
+  gap: 6px;
+  min-width: 0;
 }
 
-/* ── Cards ── */
-.card {
-  background: var(--card-bg);
+.cam-preview-card {
+  flex: 1;
+  padding: 0;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
+  overflow: hidden;
+  min-height: 0;
 }
-
-/* ── Camera preview ── */
-.cam-preview-card { padding: 0; }
 .cam-preview-wrap {
   position: relative;
   width: 100%;
-  max-height: 200px;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   background: #000;
   overflow: hidden;
 }
@@ -84,8 +89,6 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  position: absolute;
-  inset: 0;
 }
 .cam-preview-off {
   position: absolute;
@@ -97,95 +100,104 @@ body {
   gap: 6px;
   background: #1a1a1a;
 }
-.cam-off-icon { font-size: 24px; }
+.cam-off-icon { font-size: 28px; }
 .cam-off-text { font-size: 11px; color: var(--text-secondary); }
-.cam-info-row {
-  padding: 6px 10px;
-  border-top: 1px solid var(--border);
+
+.cam-preview-footer {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 .cam-select {
-  width: 100%;
-  padding: 4px 8px;
+  flex: 1;
+  padding: 5px 8px;
   border-radius: 6px;
-  background: var(--bg);
+  background: var(--card-bg);
   color: var(--text-primary);
   border: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 11px;
 }
-.cam-status-row {
-  padding: 6px 10px;
+.cam-status-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
-  border-top: 1px solid var(--border);
+  padding: 2px 2px;
 }
 
-/* Detection status */
+/* RIGHT: Controls column */
+.col-controls {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* ── Detection status ── */
 .detection-status-text { font-size: 12px; }
 .detection-status-text.face-detected { color: var(--green); font-weight: 500; }
 .detection-status-text.no-face { color: var(--orange); }
 .detection-status-text.error { color: var(--red); }
 .detection-timer { color: var(--text-secondary); font-size: 11px; }
 
-/* ── Preview toggle row ── */
-.cam-preview-toggle-row {
-  padding: 6px 10px;
-  border-top: 1px solid var(--border);
-}
-.btn-block { width: 100%; text-align: center; }
+/* ── Enrollment ── */
+.cam-enroll-card { padding: 10px 12px; }
+.cam-enroll-row { display: flex; align-items: center; gap: 8px; }
+.cam-enroll-thumb { width: 44px; height: 33px; border-radius: 5px; object-fit: cover; }
+.cam-enroll-info { display: flex; flex-direction: column; gap: 3px; font-size: 11px; flex: 1; }
+.cam-enroll-prompt { display: flex; align-items: center; gap: 6px; font-size: 11px; flex-wrap: wrap; }
 
 /* ── Threshold controls ── */
 .cam-threshold-card { padding: 10px 12px; }
 .threshold-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 .threshold-row:last-child { margin-bottom: 0; }
-.threshold-row { flex-direction: column; align-items: stretch; }
-.threshold-label { margin-bottom: 4px; }
 .threshold-label label { font-size: 12px; color: var(--text-primary); font-weight: 500; }
-.threshold-desc { display: block; font-size: 10px; color: var(--text-secondary); margin-top: 1px; }
+.threshold-desc { font-size: 9px; color: var(--text-secondary); }
 .threshold-control {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
 }
 .threshold-control input[type="range"] { flex: 1; }
 .threshold-control .slider-val { min-width: 30px; text-align: right; font-size: 11px; }
 
-/* ── Enrollment ── */
-.cam-enroll-card { padding: 10px 12px; }
-.cam-enroll-row { display: flex; align-items: center; gap: 10px; }
-.cam-enroll-thumb { width: 50px; height: 38px; border-radius: 6px; object-fit: cover; }
-.cam-enroll-info { display: flex; flex-direction: column; gap: 4px; font-size: 12px; flex: 1; }
-.cam-enroll-prompt { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-
 /* ── Action buttons ── */
 .cam-actions {
   display: flex;
+  flex-direction: column;
   gap: 6px;
-  justify-content: center;
-  padding: 4px 0;
+  margin-top: auto;
 }
 
 /* ── Buttons ── */
 .btn {
   border: none;
   border-radius: 6px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   -webkit-app-region: no-drag;
   transition: opacity 0.15s;
+  text-align: center;
 }
 .btn:hover { opacity: 0.85; }
-.btn-sm { font-size: 11px; padding: 6px 10px; }
+.btn-sm { font-size: 11px; padding: 5px 8px; }
+.btn-xs { font-size: 10px; padding: 4px 8px; }
 .btn-primary { background: var(--accent); color: white; }
 .btn-secondary { background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border); }
 .btn-danger { background: var(--red); color: white; }
@@ -207,7 +219,7 @@ body {
 .settings-panel {
   background: var(--bg);
   border-radius: 12px;
-  max-width: 380px;
+  max-width: 360px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
@@ -253,7 +265,7 @@ body {
   margin-bottom: 4px;
   font-size: 12px;
 }
-.slider-val { color: var(--accent); font-weight: 500; }
+.slider-val { color: var(--accent); font-weight: 500; font-size: 11px; }
 .slider-labels {
   display: flex;
   justify-content: space-between;
@@ -271,14 +283,14 @@ input[type="range"] {
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent);
   cursor: pointer;
 }
 
-/* ── Pref rows (settings panel) ── */
+/* ── Pref rows ── */
 .pref-row {
   display: flex;
   align-items: center;
@@ -293,8 +305,8 @@ input[type="range"]::-webkit-slider-thumb {
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 40px;
-  height: 22px;
+  width: 36px;
+  height: 20px;
   cursor: pointer;
 }
 .toggle-switch input { display: none; }
@@ -302,14 +314,14 @@ input[type="range"]::-webkit-slider-thumb {
   position: absolute;
   inset: 0;
   background: #555;
-  border-radius: 11px;
+  border-radius: 10px;
   transition: background 0.2s;
 }
 .toggle-knob::before {
   content: '';
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   left: 2px;
   bottom: 2px;
   background: white;
@@ -317,4 +329,4 @@ input[type="range"]::-webkit-slider-thumb {
   transition: transform 0.2s;
 }
 .toggle-switch input:checked + .toggle-knob { background: var(--green); }
-.toggle-switch input:checked + .toggle-knob::before { transform: translateX(18px); }
+.toggle-switch input:checked + .toggle-knob::before { transform: translateX(16px); }
