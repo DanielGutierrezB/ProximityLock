@@ -228,10 +228,23 @@ ipcMain.handle(IPC.REMOVE_DEVICE, (_e, { id }) => {
 
 bluetooth.on('rssiUpdate', (device) => handleRssiUpdate(device.rssi));
 
-// When no signal is received for 8s, treat as very far away
+// When no signal is received for 5s, lock immediately
 bluetooth.on('signalLost', () => {
-  console.log('[LOCK] Signal lost — treating as far away');
-  handleRssiUpdate(-100);  // inject a very weak reading
+  const { enabled, selectedDeviceId } = store.store;
+  if (!enabled || !selectedDeviceId) return;
+  const cooldownRemaining = LOCK_COOLDOWN_MS - (Date.now() - lastLockedAt);
+  if (cooldownRemaining > 0) {
+    console.log('[LOCK] Signal lost but in cooldown, skipping');
+    return;
+  }
+  console.log('[LOCK] Signal LOST — locking immediately');
+  smoothedRssi = null;
+  isLocking = true;
+  lastLockedAt = Date.now();
+  const deviceName = store.get('selectedDeviceName');
+  tray.updateStatus(STATUS.DISCONNECTED, deviceName, -100);
+  prefsWindow?.webContents.send(IPC.DEVICE_RSSI_UPDATE, { rssi: -100, status: STATUS.DISCONNECTED });
+  lockMgr.scheduleLock(0);
 });
 
 bluetooth.on('deviceDiscovered', () => {

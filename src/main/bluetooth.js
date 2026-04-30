@@ -12,7 +12,7 @@ class BluetoothManager extends EventEmitter {
     this.bluetoothState = 'unknown';
     this._lastMonitoredSeen = 0;     // timestamp of last monitored device sighting
     this._signalLostTimer = null;    // fires when no signal for too long
-    this._signalLostTimeout = 8000;  // 8 seconds without signal = device gone
+    this._signalLostTimeout = 5000;  // 5 seconds without signal = device gone
 
     noble.on('stateChange', this._onStateChange.bind(this));
     noble.on('discover', this._onDiscover.bind(this));
