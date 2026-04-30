@@ -56,12 +56,27 @@ function openPrefsWindow() {
   prefsWindow.on('closed', () => { prefsWindow = null; });
 }
 
+// ── RSSI Smoothing (Exponential Moving Average) ──────────────────────────────
+
+const EMA_ALPHA = 0.3;  // 0.0–1.0; lower = smoother but slower to react
+let smoothedRssi = null;
+
+function smoothRssi(rawRssi) {
+  if (smoothedRssi === null) {
+    smoothedRssi = rawRssi;
+  } else {
+    smoothedRssi = EMA_ALPHA * rawRssi + (1 - EMA_ALPHA) * smoothedRssi;
+  }
+  return Math.round(smoothedRssi);
+}
+
 // ── Proximity logic ───────────────────────────────────────────────────────────
 
-function handleRssiUpdate(rssi) {
+function handleRssiUpdate(rawRssi) {
   const { enabled, selectedDeviceId, rssiThreshold, lockDelaySec } = store.store;
   if (!selectedDeviceId) return;
 
+  const rssi = smoothRssi(rawRssi);
   const deviceName = store.get('selectedDeviceName');
   let newStatus;
 
@@ -73,7 +88,7 @@ function handleRssiUpdate(rssi) {
     newStatus = STATUS.DISCONNECTED;
   }
 
-  // Always update UI with signal data
+  // Always update UI with smoothed signal data
   tray.updateStatus(newStatus, deviceName, rssi);
   prefsWindow?.webContents.send(IPC.DEVICE_RSSI_UPDATE, { rssi, status: newStatus });
 
@@ -137,6 +152,7 @@ ipcMain.handle(IPC.STOP_SCAN, () => {
 
 ipcMain.handle(IPC.SELECT_DEVICE, (_e, { id, name }) => {
   belowThresholdAt = null; // reset grace period so new device gets a clean slate
+  smoothedRssi = null;     // reset EMA for new device
   store.set('selectedDeviceId', id);
   store.set('selectedDeviceName', name);
   bluetooth.setMonitoredDevice(id);
