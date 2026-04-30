@@ -23,10 +23,10 @@
             <div class="rssi-bar-fill none" id="rssi-fill" style="width:0%"></div>
           </div>
           <div class="rssi-labels">
-            <span>Very Close</span>
-            <span>Close</span>
-            <span>Medium</span>
             <span>Far</span>
+            <span>Medium</span>
+            <span>Close</span>
+            <span>Very Close</span>
           </div>
         </div>
       `;

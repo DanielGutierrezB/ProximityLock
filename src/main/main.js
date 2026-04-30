@@ -72,20 +72,36 @@ function smoothRssi(rawRssi) {
 
 // ── Proximity logic ───────────────────────────────────────────────────────────
 
+// Hysteresis: once we go below threshold, require rssi to go ABOVE threshold+HYSTERESIS to cancel
+const HYSTERESIS_DB = 5;
+let isLocking = false;  // true once we crossed below threshold
+
 function handleRssiUpdate(rawRssi) {
   const { enabled, selectedDeviceId, rssiThreshold, lockDelaySec } = store.store;
   if (!selectedDeviceId) return;
 
   const rssi = smoothRssi(rawRssi);
   const deviceName = store.get('selectedDeviceName');
-  let newStatus;
 
-  if (rssi >= rssiThreshold + 10) {
-    newStatus = STATUS.CONNECTED;
-  } else if (rssi >= rssiThreshold) {
-    newStatus = STATUS.EDGE;
+  // Determine status with hysteresis
+  let newStatus;
+  if (isLocking) {
+    // Once locking started, require significantly stronger signal to cancel
+    if (rssi >= rssiThreshold + HYSTERESIS_DB) {
+      isLocking = false;
+      newStatus = STATUS.CONNECTED;
+    } else {
+      newStatus = STATUS.DISCONNECTED;
+    }
   } else {
-    newStatus = STATUS.DISCONNECTED;
+    if (rssi >= rssiThreshold + 10) {
+      newStatus = STATUS.CONNECTED;
+    } else if (rssi >= rssiThreshold) {
+      newStatus = STATUS.EDGE;
+    } else {
+      newStatus = STATUS.DISCONNECTED;
+      isLocking = true;
+    }
   }
 
   // Always update UI with smoothed signal data
@@ -96,12 +112,17 @@ function handleRssiUpdate(rawRssi) {
   if (!enabled) return;
 
   if (newStatus === STATUS.DISCONNECTED) {
-    if (!belowThresholdAt) belowThresholdAt = Date.now();
+    if (!belowThresholdAt) {
+      belowThresholdAt = Date.now();
+      console.log('[LOCK] Below threshold! smoothed:', rssi, 'raw:', rawRssi, 'threshold:', rssiThreshold);
+    }
     const elapsed = (Date.now() - belowThresholdAt) / 1000;
     if (elapsed >= lockDelaySec && !lockMgr.isLockPending) {
+      console.log('[LOCK] >>> LOCKING NOW <<< after', elapsed.toFixed(1), 's');
       lockMgr.scheduleLock(0);
     }
   } else {
+    if (belowThresholdAt) console.log('[LOCK] Back in range. smoothed:', rssi);
     belowThresholdAt = null;
     lockMgr.cancelLock();
   }
