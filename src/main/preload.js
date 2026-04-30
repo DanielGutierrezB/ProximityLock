@@ -22,6 +22,11 @@ const IPC = {
   FACE_ENROLL:      'face:enroll',
   FACE_GET:         'face:get',
   FACE_STATUS:      'face:status',
+  SCREEN_LOCKED:    'system:screen-locked',
+  SCREEN_UNLOCKED:  'system:screen-unlocked',
+  POPUP_FACE_STATUS:'popup:face-status',
+  OPEN_PREFS:       'app:open-prefs',
+  QUIT:             'app:quit',
 };
 
 contextBridge.exposeInMainWorld('proximityLock', {
@@ -32,9 +37,9 @@ contextBridge.exposeInMainWorld('proximityLock', {
   faceEnroll:         (data)   => ipcRenderer.invoke(IPC.FACE_ENROLL, data),
   faceGet:            ()       => ipcRenderer.invoke(IPC.FACE_GET),
   faceStatus:         (status) => ipcRenderer.send(IPC.FACE_STATUS, status),
-  openPrefs:          ()       => ipcRenderer.invoke('app:open-prefs'),
-  quit:               ()       => ipcRenderer.invoke('app:quit'),
-  onScreenLocked:     (cb)     => ipcRenderer.on('system:screen-locked', () => cb()),
-  onScreenUnlocked:   (cb)     => ipcRenderer.on('system:screen-unlocked', () => cb()),
-  onFaceStatusUpdate: (cb)     => ipcRenderer.on('popup:face-status', (_, data) => cb(data)),
+  openPrefs:          ()       => ipcRenderer.invoke(IPC.OPEN_PREFS),
+  quit:               ()       => ipcRenderer.invoke(IPC.QUIT),
+  onScreenLocked:     (cb)     => ipcRenderer.on(IPC.SCREEN_LOCKED, () => cb()),
+  onScreenUnlocked:   (cb)     => ipcRenderer.on(IPC.SCREEN_UNLOCKED, () => cb()),
+  onFaceStatusUpdate: (cb)     => ipcRenderer.on(IPC.POPUP_FACE_STATUS, (_, data) => cb(data)),
 });
