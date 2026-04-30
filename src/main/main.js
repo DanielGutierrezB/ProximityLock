@@ -80,7 +80,7 @@ let lastLockedAt = 0;   // timestamp of last lock, for cooldown
 const LOCK_COOLDOWN_MS = 30000; // don't re-lock for 30s after locking
 
 function handleRssiUpdate(rawRssi) {
-  const { enabled, selectedDeviceId, rssiThreshold, lockDelaySec } = store.store;
+  const { enabled, selectedDeviceId, rssiThreshold, lockDelaySec, lockMode } = store.store;
   if (!selectedDeviceId) return;
 
   const rssi = smoothRssi(rawRssi);
@@ -111,8 +111,8 @@ function handleRssiUpdate(rawRssi) {
   tray.updateStatus(newStatus, deviceName, rssi);
   prefsWindow?.webContents.send(IPC.DEVICE_RSSI_UPDATE, { rssi, status: newStatus });
 
-  // Only trigger lock/unlock logic when enabled
-  if (!enabled) return;
+  // Only trigger lock/unlock logic when enabled AND in bluetooth mode
+  if (!enabled || lockMode === 'camera') return;
 
   if (newStatus === STATUS.DISCONNECTED) {
     if (!belowThresholdAt) {
@@ -229,9 +229,10 @@ ipcMain.handle(IPC.REMOVE_DEVICE, (_e, { id }) => {
 
 bluetooth.on('rssiUpdate', (device) => handleRssiUpdate(device.rssi));
 
-// When no signal is received for 5s, lock immediately
+// When no signal is received for 5s, lock immediately (BT mode only)
 bluetooth.on('signalLost', () => {
-  const { enabled, selectedDeviceId } = store.store;
+  const { enabled, selectedDeviceId, lockMode } = store.store;
+  if (lockMode === 'camera') return;
   if (!enabled || !selectedDeviceId) return;
   const cooldownRemaining = LOCK_COOLDOWN_MS - (Date.now() - lastLockedAt);
   if (cooldownRemaining > 0) {
