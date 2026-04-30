@@ -76,6 +76,13 @@ body {
   letter-spacing: -0.01em;
   pointer-events: none;
 }
+.titlebar-version {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  margin-left: 6px;
+}
 
 /* ── Two-column layout ── */
 .app-layout {

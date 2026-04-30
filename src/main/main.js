@@ -25,10 +25,10 @@ function openPrefsWindow() {
     return;
   }
   prefsWindow = new BrowserWindow({
-    width: 900,
-    height: 560,
-    minWidth: 680,
-    minHeight: 450,
+    width: 1080,
+    height: 680,
+    minWidth: 720,
+    minHeight: 500,
     title: 'ProximityLock',
     resizable: true,
     minimizable: true,
