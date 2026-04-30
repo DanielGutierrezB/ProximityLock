@@ -723,3 +723,101 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
     background: rgba(0,0,0,0.55);
   }
 }
+
+/* ── Lock Mode Segmented Control ── */
+.lock-mode-selector {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 4px;
+}
+
+.lock-mode-control {
+  display: inline-flex;
+  background: var(--toggle-off);
+  border-radius: 10px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.lock-mode-btn {
+  padding: 5px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  -webkit-app-region: no-drag;
+  white-space: nowrap;
+}
+
+.lock-mode-btn.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.14), 0 0 0 0.5px rgba(0,0,0,0.08);
+}
+
+.lock-mode-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+/* ── Camera Mode ── */
+.camera-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.camera-card video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: cover;
+  background: #000;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.detection-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--divider);
+  min-height: 40px;
+}
+
+.detection-status-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.detection-status-text.face-detected { color: var(--green); }
+.detection-status-text.no-face       { color: var(--orange); }
+.detection-status-text.error         { color: var(--red); font-size: 11px; }
+
+.detection-timer {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toggle row inside .card-body (camera settings) */
+.camera-settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--divider);
+}
+
+.camera-settings-toggle .pref-label {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 400;
+}

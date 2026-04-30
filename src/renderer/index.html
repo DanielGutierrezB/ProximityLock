@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' file: 'unsafe-eval'; connect-src 'self' blob: file:; worker-src 'self' blob:; media-src 'self' blob:">
   <title>ProximityLock</title>
   <link rel="stylesheet" href="styles/main.css">
 </head>
@@ -58,7 +58,16 @@
     <!-- ── RIGHT COLUMN: Settings ── -->
     <div class="col col-right">
 
-      <div class="settings-section" data-section="signal">
+      <!-- Lock Mode Selector -->
+      <div class="lock-mode-selector">
+        <div class="lock-mode-control">
+          <button class="lock-mode-btn" id="mode-bt">Bluetooth</button>
+          <button class="lock-mode-btn" id="mode-camera">Camera</button>
+        </div>
+      </div>
+
+      <!-- BT Mode: Live Signal -->
+      <div class="settings-section bt-only" data-section="signal">
         <button class="section-header">
           <span>Live Signal</span>
           <span class="collapse-arrow">▼</span>
@@ -70,7 +79,8 @@
         </div>
       </div>
 
-      <div class="settings-section" data-section="lock-sensitivity">
+      <!-- BT Mode: Lock Sensitivity -->
+      <div class="settings-section bt-only" data-section="lock-sensitivity">
         <button class="section-header">
           <span>Lock Sensitivity</span>
           <span class="collapse-arrow">▼</span>
@@ -100,6 +110,62 @@
         </div>
       </div>
 
+      <!-- Camera Mode: Preview + Detection Status -->
+      <div class="settings-section camera-only" data-section="camera-preview" style="display:none">
+        <button class="section-header">
+          <span>Camera</span>
+          <span class="collapse-arrow">▼</span>
+        </button>
+        <div class="section-body">
+          <div class="card camera-card">
+            <video id="camera-preview-video" width="320" height="240" autoplay muted playsinline></video>
+            <div class="detection-status">
+              <span class="detection-status-text" id="detection-status-text">Waiting…</span>
+              <span class="detection-timer" id="detection-timer"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Camera Mode: Settings -->
+      <div class="settings-section camera-only" data-section="camera-settings" style="display:none">
+        <button class="section-header">
+          <span>Camera Lock Settings</span>
+          <span class="collapse-arrow">▼</span>
+        </button>
+        <div class="section-body">
+          <div class="card card-body">
+            <div class="slider-row">
+              <div class="slider-header">
+                <label for="camera-lock-delay">Lock after no face for</label>
+                <span class="slider-val" id="camera-lock-delay-val">— s</span>
+              </div>
+              <p class="control-desc">Lock the screen after this many seconds with no face detected.</p>
+              <input type="range" id="camera-lock-delay" min="3" max="30" step="1">
+              <div class="slider-labels"><span>3 s</span><span>15 s</span><span>30 s</span></div>
+            </div>
+            <div class="slider-divider"></div>
+            <div class="slider-row">
+              <div class="slider-header">
+                <label for="camera-check-interval">Check every</label>
+                <span class="slider-val" id="camera-check-interval-val">— s</span>
+              </div>
+              <p class="control-desc">How often to run face detection. Lower values use more CPU.</p>
+              <input type="range" id="camera-check-interval" min="0.5" max="3" step="0.5">
+              <div class="slider-labels"><span>0.5 s</span><span>1.5 s</span><span>3 s</span></div>
+            </div>
+            <div class="camera-settings-toggle">
+              <span class="pref-label">Show Camera Preview</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="show-camera-preview">
+                <span class="toggle-knob"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- App Behavior (always visible) -->
       <div class="settings-section" data-section="app-behavior">
         <button class="section-header">
           <span>App Behavior</span>
@@ -167,14 +233,13 @@
         <button class="btn btn-primary" id="save-btn">Save</button>
       </div>
 
-
-
     </div>
 
   </div>
 
   <script src="scripts/signal-meter.js"></script>
   <script src="scripts/device-list.js"></script>
+  <script src="scripts/face-detector.js"></script>
   <script src="scripts/preferences.js"></script>
 </body>
 </html>

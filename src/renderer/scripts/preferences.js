@@ -11,6 +11,15 @@
   let activeDeviceId = null;
   let latestDeviceMap = {};    // id -> {rssi, ...} from scan
 
+  // ── Camera mode state ────────────────────────────────────────────────────────
+  let lockMode     = 'bluetooth';
+  let faceDetector = null;
+  let cameraActive = false;
+  let noFaceAt     = null;
+  let lastCameraLockAt     = 0;
+  let cameraTimerUpdateId  = null;
+  const CAMERA_LOCK_COOLDOWN_MS = 30000;
+
   function $(id) { return document.getElementById(id); }
 
   function escHtml(str) {
@@ -130,7 +139,6 @@
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         savedDevices = await api.removeDevice({ id: btn.dataset.id });
-        // If active device was removed, clear active state
         if (activeDeviceId === btn.dataset.id) {
           activeDeviceId = null;
           prefs.selectedDeviceId = '';
@@ -163,7 +171,6 @@
       const stored = localStorage.getItem(`section-collapsed-${id}`);
       let shouldCollapse = stored === 'true';
 
-      // Default collapsed states (only when user hasn't set a preference)
       if (stored === null) {
         if (id === 'about') shouldCollapse = true;
         if (id === 'scan-add' && savedDevices.length > 0) shouldCollapse = true;
@@ -179,6 +186,117 @@
     });
   }
 
+  // ── Lock mode ──────────────────────────────────────────────────────────────
+
+  function applyLockModeUI(mode) {
+    document.querySelectorAll('.bt-only').forEach(el => {
+      el.style.display = mode === 'bluetooth' ? '' : 'none';
+    });
+    document.querySelectorAll('.camera-only').forEach(el => {
+      el.style.display = mode === 'camera' ? '' : 'none';
+    });
+    $('mode-bt').classList.toggle('active', mode === 'bluetooth');
+    $('mode-camera').classList.toggle('active', mode === 'camera');
+  }
+
+  function onFaceStatus({ detected }) {
+    const now = Date.now();
+    const statusEl = $('detection-status-text');
+    const timerEl  = $('detection-timer');
+
+    if (detected) {
+      noFaceAt = null;
+      if (statusEl) { statusEl.textContent = 'Face Detected ✅'; statusEl.className = 'detection-status-text face-detected'; }
+      if (timerEl)  timerEl.textContent = '';
+      return;
+    }
+
+    if (!noFaceAt) noFaceAt = now;
+
+    if (statusEl) { statusEl.textContent = 'No Face Detected ⚠️'; statusEl.className = 'detection-status-text no-face'; }
+
+    const elapsed           = (now - noFaceAt) / 1000;
+    const lockDelaySec      = parseFloat($('camera-lock-delay').value);
+    const cooldownRemaining = CAMERA_LOCK_COOLDOWN_MS - (now - lastCameraLockAt);
+
+    if (elapsed >= lockDelaySec && cooldownRemaining <= 0) {
+      lastCameraLockAt = now;
+      noFaceAt = now; // reset to prevent immediate re-lock on next tick
+      api.lockNow();
+    }
+  }
+
+  function startCameraTimerUpdate() {
+    if (cameraTimerUpdateId) return;
+    cameraTimerUpdateId = setInterval(() => {
+      if (!noFaceAt) return;
+      const elapsed = Math.floor((Date.now() - noFaceAt) / 1000);
+      const timerEl = $('detection-timer');
+      if (timerEl) timerEl.textContent = `${elapsed}s`;
+    }, 500);
+  }
+
+  function stopCameraTimerUpdate() {
+    if (cameraTimerUpdateId) { clearInterval(cameraTimerUpdateId); cameraTimerUpdateId = null; }
+  }
+
+  function updateCameraPreviewVisibility() {
+    const video = $('camera-preview-video');
+    if (!video) return;
+    const showEl = $('show-camera-preview');
+    video.style.display = (showEl && showEl.checked) ? '' : 'none';
+  }
+
+  async function startCameraMode() {
+    if (cameraActive) return;
+    cameraActive = true;
+    noFaceAt = null;
+
+    const statusEl = $('detection-status-text');
+    if (statusEl) { statusEl.textContent = 'Initializing camera…'; statusEl.className = 'detection-status-text'; }
+
+    try {
+      if (!faceDetector) {
+        faceDetector = new FaceDetector();
+        if (statusEl) statusEl.textContent = 'Loading face detection models…';
+        await faceDetector.init($('camera-preview-video'));
+      }
+
+      faceDetector.onFaceStatus = onFaceStatus;
+      const intervalMs = parseFloat($('camera-check-interval').value || '1') * 1000;
+      await faceDetector.start(intervalMs);
+
+      if (statusEl) { statusEl.textContent = 'Detecting…'; statusEl.className = 'detection-status-text'; }
+      startCameraTimerUpdate();
+      updateCameraPreviewVisibility();
+    } catch (err) {
+      console.error('[Camera Mode] Failed to start:', err.message);
+      cameraActive = false;
+      if (statusEl) { statusEl.textContent = 'Error: ' + err.message; statusEl.className = 'detection-status-text error'; }
+    }
+  }
+
+  function stopCameraMode() {
+    cameraActive = false;
+    noFaceAt = null;
+    if (faceDetector) faceDetector.stop();
+    stopCameraTimerUpdate();
+    const statusEl = $('detection-status-text');
+    if (statusEl) { statusEl.textContent = 'Camera inactive'; statusEl.className = 'detection-status-text'; }
+    const timerEl = $('detection-timer');
+    if (timerEl) timerEl.textContent = '';
+  }
+
+  async function setLockMode(mode) {
+    lockMode = mode;
+    applyLockModeUI(mode);
+    if (mode === 'camera') {
+      await startCameraMode();
+    } else {
+      stopCameraMode();
+    }
+  }
+
   // ── Init ──
 
   async function init() {
@@ -192,7 +310,6 @@
     savedDevices   = Array.isArray(prefs.savedDevices) ? prefs.savedDevices : [];
     activeDeviceId = prefs.selectedDeviceId || null;
 
-    // Build initial latestDeviceMap from any already-known devices
     try {
       const known = await api.getDevices();
       known.forEach(d => { latestDeviceMap[d.id] = d; });
@@ -205,16 +322,13 @@
     deviceList.setSavedIds(new Set(savedDevices.map(d => d.id)));
 
     deviceList.onSelect = async ({ id, name }) => {
-      // Save device to My Devices
       savedDevices = await api.saveDevice({ id, name });
-      // Make it active
       await activateDevice(id, name);
-      // Reflect saved state in scan list
       deviceList.setSavedIds(new Set(savedDevices.map(d => d.id)));
-      // Close the scan panel after adding
       closeScanPanel();
     };
 
+    // BT sliders
     $('rssi-threshold').value  = prefs.rssiThreshold;
     $('rssi-val').textContent  = rssiLabel(prefs.rssiThreshold);
     $('lock-delay').value      = prefs.lockDelaySec;
@@ -222,17 +336,32 @@
     updateSliderFill($('rssi-threshold'));
     updateSliderFill($('lock-delay'));
 
+    // App behavior toggles
     $('start-on-login').checked  = prefs.startOnLogin;
     $('menu-bar-only').checked   = prefs.menuBarOnly;
     $('show-in-dock').checked    = prefs.showInDock;
     $('start-minimized').checked = prefs.startMinimized;
     $('notifications').checked   = prefs.notifications;
 
+    // Camera sliders / toggles
+    const camDelay    = prefs.cameraLockDelay    ?? 5;
+    const camInterval = prefs.cameraCheckInterval ?? 1;
+    const showPreview = prefs.showCameraPreview   !== false;
+    $('camera-lock-delay').value         = camDelay;
+    $('camera-lock-delay-val').textContent = camDelay + ' s';
+    $('camera-check-interval').value     = camInterval;
+    $('camera-check-interval-val').textContent = camInterval.toFixed(1) + ' s';
+    $('show-camera-preview').checked     = showPreview;
+    updateSliderFill($('camera-lock-delay'));
+    updateSliderFill($('camera-check-interval'));
+
+    // Lock mode (apply UI immediately, then start camera if needed)
+    lockMode = prefs.lockMode || 'bluetooth';
+    applyLockModeUI(lockMode);
+
     renderSavedDevices();
 
-    // Register IPC listeners BEFORE starting scan
     api.onDevicesUpdated(devices => {
-      console.log('[Renderer] Devices updated, count:', devices.length);
       devices.forEach(d => { latestDeviceMap[d.id] = d; });
       deviceList.setDevices(devices);
       renderSavedDevices();
@@ -249,11 +378,16 @@
 
     bindEvents();
     initCollapsible();
-    // Don't auto-scan — scan only when user opens the Add Device panel
+
+    // Start camera mode after UI is ready (if prefs say camera)
+    if (lockMode === 'camera') {
+      startCameraMode();
+    }
 
     window.addEventListener('beforeunload', () => {
-      if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
-      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (scanTimer)  { clearTimeout(scanTimer);  scanTimer  = null; }
+      if (pollTimer)  { clearInterval(pollTimer);  pollTimer  = null; }
+      stopCameraMode();
     });
   }
 
@@ -268,6 +402,7 @@
   }
 
   function bindEvents() {
+    // BT sliders
     $('rssi-threshold').addEventListener('input', e => {
       $('rssi-val').textContent = rssiLabel(e.target.value);
       updateSliderFill(e.target);
@@ -276,13 +411,35 @@
       $('delay-val').textContent = delayLabel(e.target.value);
       updateSliderFill(e.target);
     });
+
+    // Camera sliders
+    $('camera-lock-delay').addEventListener('input', e => {
+      $('camera-lock-delay-val').textContent = e.target.value + ' s';
+      updateSliderFill(e.target);
+    });
+    $('camera-check-interval').addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      $('camera-check-interval-val').textContent = val.toFixed(1) + ' s';
+      updateSliderFill(e.target);
+      if (faceDetector && faceDetector.detecting) {
+        faceDetector.setCheckInterval(val * 1000);
+      }
+    });
+    $('show-camera-preview').addEventListener('change', updateCameraPreviewVisibility);
+
+    // Mode buttons
+    $('mode-bt').addEventListener('click',     () => setLockMode('bluetooth'));
+    $('mode-camera').addEventListener('click', () => setLockMode('camera'));
+
+    // Scan
     $('scan-btn').addEventListener('click', () => {
       if (scanning) stopScan(); else startScan();
     });
+
     $('lock-now-btn').addEventListener('click', () => api.lockNow());
     $('save-btn').addEventListener('click', save);
 
-    // Pause/Resume monitoring
+    // Pause/Resume
     let monitoringPaused = !prefs.enabled;
     updatePauseBtn(monitoringPaused);
     $('pause-btn').addEventListener('click', async () => {
@@ -290,11 +447,11 @@
       monitoringPaused = !newEnabled;
       updatePauseBtn(monitoringPaused);
     });
+
     $('show-unnamed').addEventListener('change', e => {
       deviceList.setShowUnnamed(e.target.checked);
     });
 
-    // Scan overlay open/close
     $('add-device-btn').addEventListener('click', openScanPanel);
     $('scan-close-btn').addEventListener('click', closeScanPanel);
     $('scan-overlay').addEventListener('click', e => {
@@ -306,7 +463,6 @@
     try {
       const devices = await api.getDevices();
       if (devices && devices.length > 0) {
-        console.log('[Renderer] Poll found', devices.length, 'devices');
         devices.forEach(d => { latestDeviceMap[d.id] = d; });
         deviceList.setDevices(devices);
         renderSavedDevices();
@@ -315,7 +471,7 @@
   }
 
   async function startScan() {
-    if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
+    if (scanTimer) { clearTimeout(scanTimer);  scanTimer = null; }
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     scanning = true;
     $('scan-btn').textContent = 'Stop';
@@ -327,7 +483,7 @@
   }
 
   async function stopScan() {
-    if (scanTimer) { clearTimeout(scanTimer); scanTimer = null; }
+    if (scanTimer) { clearTimeout(scanTimer);  scanTimer = null; }
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     scanning = false;
     $('scan-btn').textContent = 'Scan';
@@ -338,13 +494,17 @@
 
   async function save() {
     const updated = {
-      rssiThreshold:  parseInt($('rssi-threshold').value, 10),
-      lockDelaySec:   parseInt($('lock-delay').value, 10),
-      startOnLogin:   $('start-on-login').checked,
-      menuBarOnly:    $('menu-bar-only').checked,
-      showInDock:     $('show-in-dock').checked,
-      startMinimized: $('start-minimized').checked,
-      notifications:  $('notifications').checked,
+      rssiThreshold:       parseInt($('rssi-threshold').value, 10),
+      lockDelaySec:        parseInt($('lock-delay').value, 10),
+      startOnLogin:        $('start-on-login').checked,
+      menuBarOnly:         $('menu-bar-only').checked,
+      showInDock:          $('show-in-dock').checked,
+      startMinimized:      $('start-minimized').checked,
+      notifications:       $('notifications').checked,
+      lockMode:            lockMode,
+      cameraLockDelay:     parseFloat($('camera-lock-delay').value),
+      cameraCheckInterval: parseFloat($('camera-check-interval').value),
+      showCameraPreview:   $('show-camera-preview').checked,
     };
     await api.savePreferences(updated);
     const btn = $('save-btn');

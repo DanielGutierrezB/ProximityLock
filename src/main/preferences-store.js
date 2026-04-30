@@ -15,6 +15,10 @@ const schema = {
   startMinimized:     { type: 'boolean', default: true },
   notifications:      { type: 'boolean', default: true },
   savedDevices:       { type: 'array',   default: [] },
+  lockMode:           { type: 'string',  default: 'bluetooth' },
+  cameraCheckInterval:{ type: 'number',  default: 1 },
+  cameraLockDelay:    { type: 'number',  default: 5 },
+  showCameraPreview:  { type: 'boolean', default: true },
 };
 
 module.exports = new Store({ schema });

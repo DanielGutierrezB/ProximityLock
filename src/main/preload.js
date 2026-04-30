@@ -1,6 +1,20 @@
 'use strict';
 
 const { contextBridge, ipcRenderer } = require('electron');
+const path = require('path');
+
+// Resolve @vladmandic/human paths for renderer use
+// require.resolve('@vladmandic/human') → .../dist/human.node.js
+// go up two levels: dist/ → package root
+let _humanDir = null;
+try {
+  _humanDir = path.dirname(path.dirname(require.resolve('@vladmandic/human')));
+} catch (_) {}
+
+contextBridge.exposeInMainWorld('electronPaths', {
+  humanJsPath:    _humanDir ? `file://${path.join(_humanDir, 'dist', 'human.js')}` : null,
+  humanModelsUrl: _humanDir ? `file://${path.join(_humanDir, 'models')}/` : null,
+});
 
 // IPC channels inlined to avoid require() path issues in sandboxed preload
 const IPC = {
