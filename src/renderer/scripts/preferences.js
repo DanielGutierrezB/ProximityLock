@@ -145,6 +145,7 @@
   }
 
   async function startCamera() {
+    console.log('[UI] startCamera called, cameraActive:', cameraActive);
     if (cameraActive) return;
 
     const statusEl = $('detection-status-text');
@@ -255,8 +256,15 @@
     showEnrolledFace(faceData.photo);
   }
 
-  // Populate camera list (doesn't start camera)
+  // Populate camera list
   await populateCameraList();
+
+  // If a saved camera is selected, auto-start detection
+  const savedCamId = $('camera-select').value;
+  if (savedCamId) {
+    console.log('[UI] Saved camera found, auto-starting:', savedCamId);
+    await startCamera();
+  }
 
   // ── Event listeners ───────────────────────────────────────────────────────
 
@@ -274,6 +282,7 @@
   // Camera selector — auto-start detection when camera is selected
   $('camera-select').addEventListener('change', async () => {
     const camId = $('camera-select').value || '';
+    console.log('[UI] Camera selected:', camId);
     api.savePreferences({ selectedCameraId: camId });
     prefs.selectedCameraId = camId;
 
