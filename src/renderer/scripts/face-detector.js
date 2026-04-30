@@ -10,7 +10,7 @@ class FaceDetector {
     this.initialized  = false;
     this._busy        = false;
     this._enrolledDescriptor = null; // Float32Array from enrollment photo
-    this.SIMILARITY_THRESHOLD = 0.5; // 0-1, higher = stricter match
+    this.SIMILARITY_THRESHOLD = 0.35; // 0-1, higher = stricter match. 0.35 works well for same person with lighting/angle variations
   }
 
   async init(videoElement) {
@@ -64,11 +64,15 @@ class FaceDetector {
   }
 
   /** Start camera and begin periodic detection */
-  async start(checkIntervalMs) {
+  async start(checkIntervalMs, cameraDeviceId) {
     if (!checkIntervalMs) checkIntervalMs = 1000;
 
+    const videoConstraints = cameraDeviceId
+      ? { deviceId: { exact: cameraDeviceId }, width: { ideal: 320 }, height: { ideal: 240 } }
+      : { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: 'user' };
+
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: 'user' },
+      video: videoConstraints,
       audio: false,
     });
     this.video.srcObject = stream;

@@ -770,6 +770,13 @@ input[type="range"]:active::-webkit-slider-thumb { transform: scale(0.94); }
   overflow: hidden;
 }
 
+.camera-select-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
 .camera-card video {
   display: block;
   width: 100%;

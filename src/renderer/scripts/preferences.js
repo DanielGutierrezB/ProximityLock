@@ -287,6 +287,24 @@
     video.style.display = (showEl && showEl.checked) ? '' : 'none';
   }
 
+  async function populateCameraList() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(d => d.kind === 'videoinput');
+      const select = $('camera-select');
+      if (!select) return;
+      select.innerHTML = '';
+      cameras.forEach((cam, i) => {
+        const opt = document.createElement('option');
+        opt.value = cam.deviceId;
+        opt.textContent = cam.label || `Camera ${i + 1}`;
+        select.appendChild(opt);
+      });
+    } catch (e) {
+      console.error('[Camera] enumerate failed:', e.message);
+    }
+  }
+
   async function startCameraMode() {
     if (cameraActive) return;
     cameraActive = true;
@@ -311,7 +329,9 @@
 
       faceDetector.onFaceStatus = onFaceStatus;
       const intervalMs = parseFloat($('camera-check-interval').value || '1') * 1000;
-      await faceDetector.start(intervalMs);
+      const selectedCamera = $('camera-select')?.value || undefined;
+      await faceDetector.start(intervalMs, selectedCamera);
+      await populateCameraList();
 
       if (statusEl) { statusEl.textContent = 'Detecting…'; statusEl.className = 'detection-status-text'; }
       startCameraTimerUpdate();
@@ -504,6 +524,17 @@
     $('scan-overlay').addEventListener('click', e => {
       if (e.target === $('scan-overlay')) closeScanPanel();
     });
+
+    // Camera selector — restart camera with new device
+    if ($('camera-select')) {
+      $('camera-select').addEventListener('change', async () => {
+        if (cameraActive && faceDetector) {
+          faceDetector.stop();
+          const intervalMs = parseFloat($('camera-check-interval').value || '1') * 1000;
+          await faceDetector.start(intervalMs, $('camera-select').value || undefined);
+        }
+      });
+    }
 
     // Face enrollment buttons
     if ($('enroll-btn')) {
