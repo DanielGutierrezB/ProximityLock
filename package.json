@@ -1,6 +1,6 @@
 {
   "name": "proximitylock",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Face detection screen lock for macOS and Windows",
   "main": "src/main/main.js",
   "scripts": {
@@ -77,7 +77,7 @@
   },
   "type": "commonjs",
   "author": {
-    "name": "Daniel Guti\u00e9rrez",
+    "name": "Daniel Gutiérrez",
     "email": "daniel@proximitylock.app"
   }
 }

@@ -2,6 +2,7 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const { IPC } = require('../shared/ipc-channels');
 
 // Resolve @vladmandic/human paths for renderer use
@@ -11,8 +12,8 @@ try {
 } catch (_) {}
 
 contextBridge.exposeInMainWorld('electronPaths', {
-  humanJsPath:    _humanDir ? `file://${path.join(_humanDir, 'dist', 'human.js')}` : null,
-  humanModelsUrl: _humanDir ? `file://${path.join(_humanDir, 'models')}/` : null,
+  humanJsPath:    _humanDir ? pathToFileURL(path.join(_humanDir, 'dist', 'human.js')).href : null,
+  humanModelsUrl: _humanDir ? pathToFileURL(path.join(_humanDir, 'models')).href + '/' : null,
 });
 
 contextBridge.exposeInMainWorld('proximityLock', {
