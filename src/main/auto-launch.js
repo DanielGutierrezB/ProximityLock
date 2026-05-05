@@ -17,12 +17,4 @@ async function setAutoLaunch(enabled) {
   }
 }
 
-async function getAutoLaunchStatus() {
-  try {
-    return await autoLauncher.isEnabled();
-  } catch {
-    return false;
-  }
-}
-
-module.exports = { setAutoLaunch, getAutoLaunchStatus };
+module.exports = { setAutoLaunch };

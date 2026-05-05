@@ -1,7 +1,0 @@
-'use strict';
-
-// Camera mode defaults
-const DEFAULT_CAMERA_LOCK_DELAY = 10;
-const DEFAULT_CAMERA_CHECK_INTERVAL = 1;
-
-module.exports = { DEFAULT_CAMERA_LOCK_DELAY, DEFAULT_CAMERA_CHECK_INTERVAL };

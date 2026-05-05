@@ -7,8 +7,6 @@ const schema = {
   autoMonitor:        { type: 'boolean', default: false },
   startOnLogin:       { type: 'boolean', default: false },
   menuBarOnly:        { type: 'boolean', default: true },
-  showInDock:         { type: 'boolean', default: false },
-  startMinimized:     { type: 'boolean', default: true },
   notifications:      { type: 'boolean', default: true },
   cameraCheckInterval:{ type: 'number',  default: 1 },
   matchThreshold:     { type: 'number',  default: 35 },
@@ -19,4 +17,10 @@ const schema = {
   facePhoto:          { type: ['string', 'null'], default: null },
 };
 
-module.exports = new Store({ schema });
+module.exports = new Store({
+  schema,
+  // Note: face descriptor is biometric data stored locally.
+  // macOS file permissions restrict access to the current user.
+  // Encryption can be added for new installs via encryptionKey option,
+  // but would require migration for existing users.
+});

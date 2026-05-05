@@ -15,5 +15,6 @@ module.exports = {
     POPUP_FACE_STATUS: 'popup:face-status',
     OPEN_PREFS:        'app:open-prefs',
     QUIT:              'app:quit',
+    MONITORING_CHANGED:'monitoring:changed',
   },
 };

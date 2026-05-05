@@ -17,6 +17,7 @@ const tray = new TrayManager();
 
 function openPrefsWindow() {
   if (prefsWindow && !prefsWindow.isDestroyed()) {
+    prefsWindow.show();
     prefsWindow.focus();
     return;
   }
@@ -51,6 +52,17 @@ function openPrefsWindow() {
   prefsWindow.once('ready-to-show', () => {
     prefsWindow.show();
   });
+  // ALWAYS hide on close instead of destroying — the renderer owns the
+  // camera + face detection loop. Destroying the window kills detection
+  // and leaves the tray popup stale. The window is only truly destroyed
+  // on app.quit() (Quit button or Cmd+Q).
+  prefsWindow.on('close', (e) => {
+    if (!app.isQuitting) {
+      e.preventDefault();
+      prefsWindow.hide();
+      return;
+    }
+  });
   prefsWindow.on('closed', () => { prefsWindow = null; });
 }
 
@@ -60,7 +72,7 @@ ipcMain.handle(IPC.GET_PREFERENCES, () => store.store);
 
 ipcMain.handle(IPC.SAVE_PREFERENCES, async (_e, prefs) => {
   if (!prefs || typeof prefs !== 'object') return false;
-  const ALLOWED = ['startOnLogin', 'menuBarOnly', 'showInDock', 'startMinimized', 'notifications', 'cameraCheckInterval', 'cameraLockDelay', 'showCameraPreview', 'selectedCameraId', 'matchThreshold', 'autoMonitor'];
+  const ALLOWED = ['startOnLogin', 'menuBarOnly', 'notifications', 'cameraCheckInterval', 'cameraLockDelay', 'showCameraPreview', 'selectedCameraId', 'matchThreshold', 'autoMonitor'];
   for (const key of ALLOWED) {
     if (key in prefs) store.set(key, prefs[key]);
   }
@@ -104,6 +116,7 @@ ipcMain.handle(IPC.OPEN_PREFS, () => {
 });
 
 ipcMain.handle(IPC.QUIT, () => {
+  app.isQuitting = true;
   app.quit();
 });
 
@@ -112,13 +125,14 @@ function toggleEnabled() {
   store.set('enabled', next);
   tray.setEnabled(next);
   if (!next) {
-    lockMgr.cancelLock();
     tray.updateStatus(STATUS.DISABLED);
     console.log('[LOCK] Monitoring PAUSED');
   } else {
     console.log('[LOCK] Monitoring RESUMED');
     tray.updateStatus(STATUS.CONNECTED);
   }
+  // Notify renderer so it can start/stop the camera + detection loop
+  prefsWindow?.webContents.send(IPC.MONITORING_CHANGED, next);
   return next;
 }
 
@@ -129,12 +143,13 @@ ipcMain.handle(IPC.ENABLE_SET, (_e, enabled) => {
   store.set('enabled', enabled);
   tray.setEnabled(enabled);
   if (!enabled) {
-    lockMgr.cancelLock();
     tray.updateStatus(STATUS.DISABLED);
     tray.setTrayTitle('');
   } else {
     tray.updateStatus(STATUS.CONNECTED);
   }
+  // Notify renderer so it can start/stop the camera + detection loop
+  prefsWindow?.webContents.send(IPC.MONITORING_CHANGED, enabled);
   return enabled;
 });
 
@@ -168,6 +183,7 @@ lockMgr.on('locked', () => {
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
 app.on('window-all-closed', (e) => e.preventDefault());
+app.on('before-quit', () => { app.isQuitting = true; });
 
 app.whenReady().then(() => {
   const prefs = store.store;

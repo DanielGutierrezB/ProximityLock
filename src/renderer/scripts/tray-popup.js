@@ -42,11 +42,15 @@
   const matchValEl = $('popup-match-val');
   const delayEl = $('popup-lock-delay');
   const delayValEl = $('popup-delay-val');
+  const intervalEl = $('popup-check-interval');
+  const intervalValEl = $('popup-interval-val');
 
   matchEl.value = prefs.matchThreshold || 35;
   matchValEl.textContent = (prefs.matchThreshold || 35) + '%';
   delayEl.value = prefs.cameraLockDelay || 10;
   delayValEl.textContent = (prefs.cameraLockDelay || 10) + 's';
+  intervalEl.value = prefs.cameraCheckInterval || 1;
+  intervalValEl.textContent = (prefs.cameraCheckInterval || 1) + 's';
 
   // ── Enrolled face ─────────────────────────────────────────────────────────
 
@@ -61,10 +65,14 @@
 
   function updateMonitoringBtn(faceInfo) {
     const btn = $('popup-monitoring-btn');
+    const dot = $('status-dot');
+    const text = $('status-text');
     if (!btn) return;
     if (!monitoring) {
       btn.textContent = '▶ Start Monitoring';
       btn.className = 'btn btn-block btn-success';
+      if (dot) dot.className = 'status-dot grey';
+      if (text) text.textContent = 'Idle';
       return;
     }
     if (faceInfo && faceInfo.matched) {
@@ -76,6 +84,8 @@
     } else {
       btn.textContent = '⏹ Stop Monitoring';
       btn.className = 'btn btn-block btn-secondary';
+      if (dot) dot.className = 'status-dot grey';
+      if (text) text.textContent = 'Monitoring…';
     }
   }
 
@@ -110,6 +120,12 @@
     api.savePreferences({ cameraLockDelay: val });
   });
 
+  intervalEl.addEventListener('input', e => {
+    const val = parseFloat(e.target.value);
+    intervalValEl.textContent = val + 's';
+    api.savePreferences({ cameraCheckInterval: val });
+  });
+
   $('popup-monitoring-btn').addEventListener('click', async () => {
     await api.enableToggle();
     monitoring = !monitoring;
@@ -126,6 +142,32 @@
     api.openPrefs();
   });
 
+  // Sync full state when popup is shown (so it's never stale)
+  api.onSyncState(({ enabled, status, lastFaceStatus }) => {
+    monitoring = enabled;
+    // Update status dot + text from the last known face status
+    if (lastFaceStatus) {
+      const dot = $('status-dot');
+      const text = $('status-text');
+      if (lastFaceStatus.matched) {
+        dot.className = 'status-dot green';
+        text.textContent = `Face matched (${lastFaceStatus.similarity || 0}%)`;
+      } else {
+        dot.className = 'status-dot red';
+        text.textContent = 'No face detected';
+      }
+      updateMonitoringBtn(lastFaceStatus);
+    } else if (!enabled) {
+      const dot = $('status-dot');
+      const text = $('status-text');
+      dot.className = 'status-dot grey';
+      text.textContent = 'Idle';
+      updateMonitoringBtn(null);
+    } else {
+      updateMonitoringBtn(null);
+    }
+  });
+
   // Sync prefs from main window
   api.onPrefsChanged((changed) => {
     if ('matchThreshold' in changed) {
@@ -135,6 +177,10 @@
     if ('cameraLockDelay' in changed) {
       delayEl.value = changed.cameraLockDelay;
       delayValEl.textContent = changed.cameraLockDelay + 's';
+    }
+    if ('cameraCheckInterval' in changed) {
+      intervalEl.value = changed.cameraCheckInterval;
+      intervalValEl.textContent = changed.cameraCheckInterval + 's';
     }
   });
 

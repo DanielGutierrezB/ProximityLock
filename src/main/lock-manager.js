@@ -4,36 +4,12 @@ const { exec } = require('child_process');
 const { EventEmitter } = require('events');
 
 class LockManager extends EventEmitter {
-  constructor() {
-    super();
-    this.lockTimer = null;
-  }
-
-  scheduleLock(delaySec) {
-    if (this.lockTimer) return; // already scheduled
-    this.lockTimer = setTimeout(() => {
-      this.lockTimer = null;
-      this.lockNow();
-    }, delaySec * 1000);
-    this.emit('lockScheduled', delaySec);
-  }
-
-  cancelLock() {
-    if (this.lockTimer) {
-      clearTimeout(this.lockTimer);
-      this.lockTimer = null;
-      this.emit('lockCancelled');
-    }
-  }
-
   lockNow() {
     if (process.platform === 'win32') {
-      // Windows: lock workstation via rundll32
       exec('rundll32.exe user32.dll,LockWorkStation', (err) => {
         if (err) console.error('lock: Windows LockWorkStation failed:', err.message);
       });
     } else {
-      // macOS: launch ScreenSaverEngine, fallback to pmset
       exec('open -a ScreenSaverEngine', (err) => {
         if (err) {
           console.error('lock: ScreenSaverEngine failed:', err.message);
@@ -44,10 +20,6 @@ class LockManager extends EventEmitter {
       });
     }
     this.emit('locked');
-  }
-
-  get isLockPending() {
-    return this.lockTimer !== null;
   }
 }
 

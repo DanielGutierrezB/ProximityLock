@@ -47,7 +47,7 @@ const ICON_CACHE = {
 };
 
 const POPUP_WIDTH  = 280;
-const POPUP_HEIGHT = 380;
+const POPUP_HEIGHT = 440;
 
 class TrayManager {
   constructor() {
@@ -88,6 +88,7 @@ class TrayManager {
   }
 
   sendFaceStatus(data) {
+    this._lastFaceStatus = data;
     if (this.popupWindow && !this.popupWindow.isDestroyed() && this.popupWindow.isVisible()) {
       this.popupWindow.webContents.send('popup:face-status', data);
     }
@@ -145,6 +146,17 @@ class TrayManager {
     this.popupWindow.on('closed', () => { this.popupWindow = null; });
     this.popupWindow.once('ready-to-show', () => {
       this._positionAndShow();
+      // Push current state so the popup doesn't start stale
+      this._syncStateToPopup();
+    });
+  }
+
+  _syncStateToPopup() {
+    if (!this.popupWindow || this.popupWindow.isDestroyed()) return;
+    this.popupWindow.webContents.send('popup:sync-state', {
+      enabled: this.enabled,
+      status: this.status,
+      lastFaceStatus: this._lastFaceStatus || null,
     });
   }
 
@@ -178,6 +190,7 @@ class TrayManager {
     this.popupWindow.setPosition(x, y, false);
     this.popupWindow.show();
     this.popupWindow.focus();
+    this._syncStateToPopup();
   }
 }
 

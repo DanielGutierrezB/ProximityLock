@@ -291,6 +291,32 @@
       $('camera-lock-delay').value = changed.cameraLockDelay;
       $('camera-lock-delay-val').textContent = delayLabel(changed.cameraLockDelay);
     }
+    if ('cameraCheckInterval' in changed) {
+      $('camera-check-interval').value = changed.cameraCheckInterval;
+      $('camera-check-interval-val').textContent = intervalLabel(changed.cameraCheckInterval);
+      if (faceDetector && faceDetector.detecting) {
+        faceDetector.setCheckInterval(changed.cameraCheckInterval * 1000);
+      }
+    }
+  });
+
+  // ── Monitoring toggled from popup or tray ─────────────────────────────────
+
+  api.onMonitoringChanged(async (enabled) => {
+    if (enabled && !monitoring) {
+      // Start monitoring from popup/tray request
+      if (!cameraActive) {
+        const camId = $('camera-select')?.value || prefs.selectedCameraId;
+        if (camId) {
+          await startCamera();
+        }
+      }
+      monitoring = true;
+      updateMonitoringUI();
+    } else if (!enabled && monitoring) {
+      monitoring = false;
+      updateMonitoringUI();
+    }
   });
 
   // ── Screen lock/unlock ────────────────────────────────────────────────────
@@ -367,9 +393,11 @@
     if (faceDetector) faceDetector.SIMILARITY_THRESHOLD = val / 100;
   });
   $('camera-check-interval').addEventListener('input', e => {
-    $('camera-check-interval-val').textContent = intervalLabel(e.target.value);
+    const val = parseFloat(e.target.value);
+    $('camera-check-interval-val').textContent = intervalLabel(val);
+    api.savePreferences({ cameraCheckInterval: val });
     if (faceDetector && faceDetector.detecting) {
-      faceDetector.setCheckInterval(parseFloat(e.target.value) * 1000);
+      faceDetector.setCheckInterval(val * 1000);
     }
   });
 

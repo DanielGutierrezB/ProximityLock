@@ -1,7 +1,7 @@
 {
   "name": "proximitylock",
   "version": "1.0.0",
-  "description": "Bluetooth Proximity Lock for macOS",
+  "description": "Face detection screen lock for macOS and Windows",
   "main": "src/main/main.js",
   "scripts": {
     "dev": "electron .",
