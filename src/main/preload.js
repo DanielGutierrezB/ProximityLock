@@ -14,6 +14,7 @@ try {
 contextBridge.exposeInMainWorld('electronPaths', {
   humanJsPath:    _humanDir ? pathToFileURL(path.join(_humanDir, 'dist', 'human.js')).href : null,
   humanModelsUrl: _humanDir ? pathToFileURL(path.join(_humanDir, 'models')).href + '/' : null,
+  platform:       process.platform, // 'darwin' | 'win32' | 'linux'
 });
 
 contextBridge.exposeInMainWorld('proximityLock', {

@@ -4,6 +4,10 @@
   const $ = id => document.getElementById(id);
   const api = window.proximityLock;
   const prefs = await api.getPreferences();
+  const isWindows = window.electronPaths?.platform === 'win32';
+
+  // Add platform class for CSS rules (e.g. disable body drag on Windows)
+  if (isWindows) document.documentElement.classList.add('platform-win');
 
   let faceDetector = null;
   let cameraActive = false;
@@ -357,6 +361,12 @@
   $('start-on-login').checked = prefs.startOnLogin || false;
   $('menu-bar-only').checked = prefs.menuBarOnly !== false;
   $('notifications').checked = prefs.notifications !== false;
+
+  // "Menu Bar Only" is macOS-only (dock hide/show) — hide on Windows
+  if (isWindows) {
+    const mbRow = $('menu-bar-only-row');
+    if (mbRow) mbRow.style.display = 'none';
+  }
 
   updateMonitoringUI();
   updatePreviewUI();

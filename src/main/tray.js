@@ -126,7 +126,9 @@ class TrayManager {
       alwaysOnTop: true,
       fullscreenable: false,
       skipTaskbar: true,
-      transparent: true,
+      ...(process.platform === 'darwin'
+        ? { transparent: true }
+        : { transparent: false, backgroundColor: '#1e1e1e' }),
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
