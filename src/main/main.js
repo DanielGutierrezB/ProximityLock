@@ -42,6 +42,7 @@ function openPrefsWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // Required: preload uses require() for path + electron modules
+      backgroundThrottling: false, // Keep face detection running when window is hidden
       preload: path.join(__dirname, 'preload.js'),
     },
   });
