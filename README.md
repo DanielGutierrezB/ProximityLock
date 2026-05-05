@@ -34,8 +34,8 @@ Everything runs **locally on your machine** — no data is sent anywhere, no acc
 
 | Platform | File | Requirements |
 |----------|------|-------------|
-| 🍎 **macOS** | `ProximityLock-1.0.0-macOS-AppleSilicon.dmg` | macOS 12+, Apple Silicon (M1/M2/M3/M4) |
-| 🪟 **Windows** | `ProximityLock-Setup-1.0.0-Windows-x64.exe` | Windows 10+, 64-bit |
+| 🍎 **macOS** | `ProximityLock-1.0.1-macOS-AppleSilicon.dmg` | macOS 12+, Apple Silicon (M1/M2/M3/M4) |
+| 🪟 **Windows** | `ProximityLock-Setup-1.0.1-Windows-x64.exe` | Windows 10+, 64-bit |
 
 ---
 
@@ -205,6 +205,27 @@ Make sure camera permissions are granted in your OS privacy settings.
 - Retake your enrollment photo in good lighting
 - Lower the match threshold
 - Make sure the camera has a clear view of your face
+
+---
+
+## Changelog
+
+### v1.0.1
+- 🔧 Fixed Windows: face recognition paths broken (backslash in file:// URLs)
+- 🔧 Fixed Windows: app crash on Start Monitoring
+- 🔧 Fixed Windows: proper multi-resolution taskbar/alt-tab icon
+- 🔧 Fixed Windows: popup rendering artifacts (transparent window)
+- 🔧 Fixed Windows: accidental window dragging
+- 🔧 Fixed Windows: hidden macOS-only "Menu Bar Only" setting
+- 🔧 Fixed macOS: face detection pausing when main window closed to tray
+- 🎨 Added native Windows font (Segoe UI)
+
+### v1.0.0
+- Initial release
+- Face detection & recognition with adjustable threshold
+- Automatic screen lock with configurable delay
+- Menu bar / system tray with live status popup
+- Cross-platform: macOS (Apple Silicon) + Windows (x64)
 
 ---
 
