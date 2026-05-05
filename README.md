@@ -107,8 +107,9 @@ Click **"Take Photo"** to capture your face. This creates a local face descripto
 
 | Setting | What it does | Recommended |
 |---------|-------------|-------------|
-| **Match threshold** | How similar a face must be to count as "you". Lower = more lenient. | 35-50% |
-| **Lock delay** | Seconds without your face before the screen locks. | 3-5s |
+| **Match threshold** | How similar a face must be to count as "you". Lower = more lenient. | 35-60% |
+| **Lock delay** | Seconds without your face before the screen locks. | 3-10s |
+| **Check every** | How often the camera checks for your face. Lower = faster but more CPU. | 0.5-1s |
 
 ### 4. Start monitoring
 Click **▶ Start Monitoring**. The app will now:
@@ -119,9 +120,10 @@ Click **▶ Start Monitoring**. The app will now:
 ### 5. Menu bar / System tray
 ProximityLock lives in your menu bar (macOS) or system tray (Windows). Click the icon for quick access to:
 - Camera selection
-- Match threshold & lock delay sliders
+- Match threshold, lock delay & check interval sliders
 - Start/Stop monitoring
 - Lock Now button
+- Open App / Quit
 
 ---
 
@@ -130,11 +132,13 @@ ProximityLock lives in your menu bar (macOS) or system tray (Windows). Click the
 - 📷 **Real-time face detection** — see your match percentage live
 - 🔒 **Auto-lock** — configurable delay from 1 to 30 seconds
 - 🎯 **Adjustable sensitivity** — match threshold from 20% to 80%
+- ⏱ **Configurable check interval** — 0.5s to 3s between detection cycles
 - 👁 **Preview toggle** — detection works even with preview off
 - 📊 **Live status** — menu bar shows match % or countdown
 - 🔋 **Battery-friendly** — pauses camera when screen is locked
 - 🚀 **Auto-start** — optional, remembers your preference
 - 🔔 **Notifications** — get notified when the screen locks
+- 🖥 **Mini view** — full controls from the menu bar popup
 - 🌐 **Cross-platform** — macOS and Windows
 
 ---
