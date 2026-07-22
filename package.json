@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "electron": "^29.4.6",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^26.15.3"
   },
   "type": "commonjs",
   "author": {
